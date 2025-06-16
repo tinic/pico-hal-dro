@@ -42,37 +42,36 @@ std::expected<void, Position::PositionError> Position::get(uint8_t* out, size_t&
     if (out != nullptr) {
         memcpy(out, reinterpret_cast<const uint8_t*>(positions.data()), sizeof(positions));
     }
-    
+
     return {};
 }
 
 void Position::update_from_encoders() noexcept {
     if (auto result = QuadratureEncoder::instance().get_all_counts(); result) {
         const auto& counts = *result;
-        
+
         // Convert encoder counts to position values using scale factors
         for (size_t i = 0; i < kPositions; i++) {
             positions[i] = static_cast<double>(counts[i]) * scale_factors[i];
         }
     }
-    // If get_all_counts fails, keep previous position values - this provides 
+    // If get_all_counts fails, keep previous position values - this provides
     // graceful degradation rather than complete failure
 }
 
-std::expected<void, Position::PositionError> 
-Position::reset_encoder(size_t pos) noexcept {
+std::expected<void, Position::PositionError> Position::reset_encoder(size_t pos) noexcept {
     if (!initialized) {
         return std::unexpected(PositionError::NotInitialized);
     }
     if (pos >= kPositions) {
         return std::unexpected(PositionError::InvalidIndex);
     }
-    
+
     // Reset the encoder count and position value
     if (auto result = QuadratureEncoder::instance().reset_count(pos); !result) {
         return std::unexpected(PositionError::EncoderError);
     }
-    
+
     positions[pos] = 0.0;
     return {};
 }

@@ -1,8 +1,8 @@
-# Example HAL configuration for Pico HAL DRO
-# This shows how to integrate the Pico DRO with LinuxCNC
+# Example HAL configuration for RP2040 HAL DRO
+# This shows how to integrate the RP2040 DRO with LinuxCNC
 
-# Load the Pico DRO component
-loadusr -W pico_dro
+# Load the RP2040 DRO component
+loadusr -W rp2040_dro
 
 # Create signals for position data
 newsig x-dro-pos float
@@ -11,12 +11,12 @@ newsig z-dro-pos float
 newsig a-dro-pos float
 newsig dro-connected bit
 
-# Connect Pico DRO outputs to signals
-net x-dro-pos <= pico_dro.0.position-0
-net y-dro-pos <= pico_dro.0.position-1
-net z-dro-pos <= pico_dro.0.position-2
-net a-dro-pos <= pico_dro.0.position-3
-net dro-connected <= pico_dro.0.connected
+# Connect RP2040 DRO outputs to signals
+net x-dro-pos <= rp2040_dro.0.position-0
+net y-dro-pos <= rp2040_dro.0.position-1
+net z-dro-pos <= rp2040_dro.0.position-2
+net a-dro-pos <= rp2040_dro.0.position-3
+net dro-connected <= rp2040_dro.0.connected
 
 # Example: Connect to PyVCP panel (if you have one)
 # net x-dro-pos => pyvcp.x-dro
@@ -31,5 +31,5 @@ net dro-connected <= pico_dro.0.connected
 # net z-dro-pos => axis.2.motor-pos-fb
 
 # Show component status
-show comp pico_dro
-show pin pico_dro
+show comp rp2040_dro
+show pin rp2040_dro

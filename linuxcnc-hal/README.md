@@ -12,7 +12,7 @@ This directory contains the LinuxCNC HAL component for interfacing with the RP20
 
 1. Compile and install the component:
    ```bash
-   sudo halcompile --install pico_dro.comp
+   sudo halcompile --install rp2040_dro.comp
    ```
 
 2. Add udev rule for USB access (create `/etc/udev/rules.d/99-rp2040-dro.rules`):
@@ -32,25 +32,25 @@ In your HAL configuration file:
 
 ```hal
 # Load the component
-loadusr -W pico_dro
+loadusr -W rp2040_dro
 
 # Connect position outputs to your DRO display
-net x-pos pico_dro.0.position-0 => pyvcp.x-dro
-net y-pos pico_dro.0.position-1 => pyvcp.y-dro
-net z-pos pico_dro.0.position-2 => pyvcp.z-dro
-net a-pos pico_dro.0.position-3 => pyvcp.a-dro
+net x-pos rp2040_dro.0.position-0 => pyvcp.x-dro
+net y-pos rp2040_dro.0.position-1 => pyvcp.y-dro
+net z-pos rp2040_dro.0.position-2 => pyvcp.z-dro
+net a-pos rp2040_dro.0.position-3 => pyvcp.a-dro
 
 # Monitor connection status
-net dro-connected pico_dro.0.connected => pyvcp.dro-connected-led
+net dro-connected rp2040_dro.0.connected => pyvcp.dro-connected-led
 ```
 
 ## HAL Pins
 
-- `pico_dro.0.position-0` (float, out) - Position 0 value
-- `pico_dro.0.position-1` (float, out) - Position 1 value
-- `pico_dro.0.position-2` (float, out) - Position 2 value
-- `pico_dro.0.position-3` (float, out) - Position 3 value
-- `pico_dro.0.connected` (bit, out) - True when USB device is connected
+- `rp2040_dro.0.position-0` (float, out) - Position 0 value
+- `rp2040_dro.0.position-1` (float, out) - Position 1 value
+- `rp2040_dro.0.position-2` (float, out) - Position 2 value
+- `rp2040_dro.0.position-3` (float, out) - Position 3 value
+- `rp2040_dro.0.connected` (bit, out) - True when USB device is connected
 
 ## Troubleshooting
 
@@ -61,12 +61,12 @@ net dro-connected pico_dro.0.connected => pyvcp.dro-connected-led
 
 2. Check HAL component is loaded:
    ```bash
-   halcmd show comp pico_dro
+   halcmd show comp rp2040_dro
    ```
 
 3. Monitor HAL pins:
    ```bash
-   halcmd show pin pico_dro
+   halcmd show pin rp2040_dro
    ```
 
 4. Check for USB permission issues:

@@ -4,7 +4,7 @@ This project implements a USB device on RP2040-based boards that interfaces with
 
 ## Project Structure
 
-- `pico-firmware/` - RP2040 firmware
+- `rp2040-firmware/` - RP2040 firmware
   - `main.cpp` - Main firmware entry point
   - `position.cpp/h` - Position tracking implementation
   - `usb_device.cpp/h` - USB device implementation
@@ -12,16 +12,16 @@ This project implements a USB device on RP2040-based boards that interfaces with
   - `CMakeLists.txt` - CMake build configuration
   - `pico-sdk/` - Pico SDK submodule
 - `linuxcnc-hal/` - LinuxCNC HAL component
-  - `pico_dro.comp` - HAL component source
+  - `rp2040_dro.comp` - HAL component source
   - `README.md` - Installation and usage instructions
-  - `pico-dro-example.hal` - Example HAL configuration
+  - `rp2040-dro-example.hal` - Example HAL configuration
 - `test_usb_device.py` - Python test script for USB communication
 
 ## Build Commands
 
 ### Firmware Build
 ```bash
-cd pico-firmware
+cd rp2040-firmware
 mkdir -p build
 cd build
 cmake ..
@@ -90,7 +90,7 @@ See `linuxcnc-hal/README.md` for detailed installation and usage instructions.
 Quick start:
 ```bash
 cd linuxcnc-hal
-sudo halcompile --install pico_dro.comp
+sudo halcompile --install rp2040_dro.comp
 ```
 
 ## USB Protocol

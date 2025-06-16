@@ -1,4 +1,4 @@
-component pico_dro "RP2040 USB DRO interface";
+component rp2040_dro "RP2040 USB DRO interface";
 author "Claude";
 license "GPL";
 
@@ -33,7 +33,7 @@ int extra_setup(void) {
     // Initialize libusb
     r = libusb_init(&ctx);
     if (r < 0) {
-        rtapi_print_msg(RTAPI_MSG_ERR, "pico_dro: Failed to initialize libusb\n");
+        rtapi_print_msg(RTAPI_MSG_ERR, "rp2040_dro: Failed to initialize libusb\n");
         return -1;
     }
     
@@ -54,7 +54,7 @@ void user_mainloop(void) {
                     // Claim interface
                     r = libusb_claim_interface(dev_handle, 0);
                     if (r < 0) {
-                        rtapi_print_msg(RTAPI_MSG_ERR, "pico_dro: Failed to claim interface\n");
+                        rtapi_print_msg(RTAPI_MSG_ERR, "rp2040_dro: Failed to claim interface\n");
                         libusb_close(dev_handle);
                         dev_handle = NULL;
                     } else {

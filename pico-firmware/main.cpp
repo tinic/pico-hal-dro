@@ -16,6 +16,11 @@ int main() {
     WS2812Led::init();
     WS2812Led::set_blue();  // Show blue on startup
 
+    // Configure TXS0108E level shifter - set OE pin (GPIO 8) low to disable outputs
+    gpio_init(8);
+    gpio_set_dir(8, GPIO_OUT);
+    gpio_put(8, 0);  // OE low = outputs disabled (high-Z state)
+
     // Initialize the USB device
     if (auto result = USBDevice::instance().init(); !result) {
         // USB init failed - show red LED

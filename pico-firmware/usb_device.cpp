@@ -65,11 +65,13 @@ void USBDevice::task() noexcept {
         uint8_t request_buf[64];  // Larger buffer
         uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, request_buf, sizeof(request_buf));
         if (count > 0) {
-            // Yellow flash to indicate command received (more distinct)
-            WS2812Led::set_color(255, 255, 0);  // Yellow
-            sleep_us(50000);  // 50ms
-            WS2812Led::set_off();
-            
+            static bool flip = false;
+            if (flip) {
+                WS2812Led::set_color(255, 255, 0);  // Yellow
+            } else {
+                WS2812Led::set_off();
+            }
+            flip ^= 1;
             // Process each byte as a potential command
             for (uint32_t i = 0; i < count; i++) {
                 switch (request_buf[i]) {
@@ -110,16 +112,8 @@ std::expected<void, USBDevice::USBError> USBDevice::send_position_data() noexcep
         return std::unexpected(USBError::TransmissionFailed);
     }
 
-    // Red LED to indicate sending response
-    WS2812Led::set_red();
-
     // Send the position data
     uint32_t written = tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), bytes);
-    
-    // Keep LED on for a visible duration
-    sleep_us(100000);  // 100ms
-    WS2812Led::set_off();
-    
     if (written != bytes) {
         return std::unexpected(USBError::TransmissionFailed);
     }
@@ -178,11 +172,6 @@ void tud_vendor_rx_cb(uint8_t itf, uint8_t const* buffer, uint16_t bufsize) {
     (void)itf;
     (void)buffer;
     (void)bufsize;
-
-    // Purple flash to indicate USB RX traffic (more distinct)
-    WS2812Led::set_color(128, 0, 128);  // Purple
-    sleep_us(30000);  // 30ms
-    WS2812Led::set_off();
 }
 
 void tud_vendor_tx_cb(uint8_t itf, uint32_t sent_bytes) {

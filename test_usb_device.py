@@ -68,7 +68,7 @@ def get_position_once(dev):
     """Get position data once"""
     try:
         # Send request
-        result = dev.write(EP_OUT, [VENDOR_REQUEST_GET_POSITION], timeout=1000)
+        result = dev.write(EP_OUT, [VENDOR_REQUEST_GET_POSITION], timeout=100)
         if result != 1:
             return None
         
@@ -76,7 +76,7 @@ def get_position_once(dev):
         time.sleep(0.05)
         
         # Read response
-        data = dev.read(EP_IN, 64, timeout=1000)
+        data = dev.read(EP_IN, 64, timeout=100)
         
         # Parse the data (4 doubles = 32 bytes)
         if len(data) >= 32:
@@ -89,6 +89,31 @@ def get_position_once(dev):
         pass  # Timeout is normal, just return None
     except Exception as e:
         print(f"USB error: {e}")
+        
+    return None
+
+def get_position_fast(dev):
+    """Get position data with minimal delays for high-frequency testing"""
+    try:
+        # Send request with short timeout
+        result = dev.write(EP_OUT, [VENDOR_REQUEST_GET_POSITION], timeout=10)
+        if result != 1:
+            return None
+        
+        # No artificial delay - let USB handle timing
+        
+        # Read response with short timeout
+        data = dev.read(EP_IN, 64, timeout=10)
+        
+        # Parse the data (4 doubles = 32 bytes)
+        if len(data) >= 32:
+            positions = struct.unpack('<4d', bytes(data[:32]))
+            return positions
+            
+    except usb.core.USBTimeoutError:
+        pass  # Timeout is normal, just return None
+    except Exception as e:
+        pass  # Silently ignore errors in fast mode
         
     return None
 
@@ -115,6 +140,57 @@ def poll_positions(dev, duration=5, frequency=2):
     
     success_rate = (successful_reads / count) * 100 if count > 0 else 0
     print(f"Success rate: {successful_reads}/{count} ({success_rate:.1f}%)")
+
+def poll_high_frequency(dev, duration=5):
+    """Poll position data as fast as possible with inline display"""
+    print(f"High-frequency polling for {duration} seconds (no artificial delays)...")
+    print("(Press Ctrl+C to stop early)")
+    
+    start_time = time.time()
+    count = 0
+    successful_reads = 0
+    last_update_time = start_time
+    
+    try:
+        while time.time() - start_time < duration:
+            loop_start = time.time()
+            positions = get_position_fast(dev)
+            count += 1
+            
+            current_time = time.time()
+            elapsed = current_time - start_time
+            
+            if positions:
+                successful_reads += 1
+                
+            # Update display every 0.1 seconds to avoid overwhelming the terminal
+            if current_time - last_update_time >= 0.1:
+                actual_pps = count / elapsed if elapsed > 0 else 0
+                successful_pps = successful_reads / elapsed if elapsed > 0 else 0
+                avg_loop_time = (current_time - loop_start) * 1000  # Convert to ms
+                
+                if positions:
+                    print(f"\r[{successful_reads:5d}/{count:5d}] {elapsed:6.2f}s | X:{positions[0]:8.3f} Y:{positions[1]:8.3f} Z:{positions[2]:8.3f} A:{positions[3]:8.1f} | {actual_pps:6.1f} pps | {avg_loop_time:4.1f}ms/loop", end="", flush=True)
+                else:
+                    print(f"\r[{successful_reads:5d}/{count:5d}] {elapsed:6.2f}s | No response                                                    | {actual_pps:6.1f} pps | {avg_loop_time:4.1f}ms/loop", end="", flush=True)
+                
+                last_update_time = current_time
+            
+    except KeyboardInterrupt:
+        elapsed = time.time() - start_time
+        print(f"\n\nStopped by user after {elapsed:.2f} seconds")
+    
+    elapsed = time.time() - start_time
+    actual_pps = count / elapsed if elapsed > 0 else 0
+    successful_pps = successful_reads / elapsed if elapsed > 0 else 0
+    
+    print(f"\nPerformance Summary:")
+    print(f"  Total packets attempted: {count}")
+    print(f"  Successful packets: {successful_reads}")
+    print(f"  Success rate: {(successful_reads/count)*100 if count > 0 else 0:.1f}%")
+    print(f"  Actual packets per second: {actual_pps:.1f}")
+    print(f"  Successful packets per second: {successful_pps:.1f}")
+    print(f"  Average time per attempt: {(elapsed/count)*1000 if count > 0 else 0:.1f} ms")
 
 def test_mode_demo(dev):
     """Demonstrate test mode functionality"""
@@ -191,6 +267,10 @@ def main():
         # Test position polling at a reasonable rate
         print("\nTesting position polling:")
         poll_positions(dev, duration=10, frequency=2)  # 2 Hz for 10 seconds
+        
+        # Test high-frequency polling
+        print("\nTesting high-frequency polling:")
+        poll_high_frequency(dev, duration=10)  # 1ms intervals for 10 seconds
         
         # Test all test mode patterns
         test_mode_demo(dev)

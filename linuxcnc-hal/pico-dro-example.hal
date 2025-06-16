@@ -1,0 +1,35 @@
+# Example HAL configuration for Pico HAL DRO
+# This shows how to integrate the Pico DRO with LinuxCNC
+
+# Load the Pico DRO component
+loadusr -W pico_dro
+
+# Create signals for position data
+newsig x-dro-pos float
+newsig y-dro-pos float
+newsig z-dro-pos float
+newsig a-dro-pos float
+newsig dro-connected bit
+
+# Connect Pico DRO outputs to signals
+net x-dro-pos <= pico_dro.0.position-0
+net y-dro-pos <= pico_dro.0.position-1
+net z-dro-pos <= pico_dro.0.position-2
+net a-dro-pos <= pico_dro.0.position-3
+net dro-connected <= pico_dro.0.connected
+
+# Example: Connect to PyVCP panel (if you have one)
+# net x-dro-pos => pyvcp.x-dro
+# net y-dro-pos => pyvcp.y-dro
+# net z-dro-pos => pyvcp.z-dro
+# net a-dro-pos => pyvcp.a-dro
+# net dro-connected => pyvcp.dro-status-led
+
+# Example: Use for axis feedback (be careful with this!)
+# net x-dro-pos => axis.0.motor-pos-fb
+# net y-dro-pos => axis.1.motor-pos-fb
+# net z-dro-pos => axis.2.motor-pos-fb
+
+# Show component status
+show comp pico_dro
+show pin pico_dro

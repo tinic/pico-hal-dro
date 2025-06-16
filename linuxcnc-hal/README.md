@@ -1,6 +1,6 @@
-# LinuxCNC HAL Component for Pico HAL DRO
+# LinuxCNC HAL Component for RP2040 HAL DRO
 
-This directory contains the LinuxCNC HAL component for interfacing with the Raspberry Pi Pico USB DRO device.
+This directory contains the LinuxCNC HAL component for interfacing with the RP2040 USB DRO device.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ This directory contains the LinuxCNC HAL component for interfacing with the Rasp
    sudo halcompile --install pico_dro.comp
    ```
 
-2. Add udev rule for USB access (create `/etc/udev/rules.d/99-pico-dro.rules`):
+2. Add udev rule for USB access (create `/etc/udev/rules.d/99-rp2040-dro.rules`):
    ```
    SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="10df", MODE="0666"
    ```

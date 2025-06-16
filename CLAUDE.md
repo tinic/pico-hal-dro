@@ -1,10 +1,10 @@
-# Raspberry Pi Pico LinuxCNC HAL USB Device
+# RP2040 LinuxCNC HAL USB Device
 
-This project implements a USB device on the Raspberry Pi Pico that interfaces with LinuxCNC through a HAL (Hardware Abstraction Layer) driver.
+This project implements a USB device on RP2040-based boards that interfaces with LinuxCNC through a HAL (Hardware Abstraction Layer) driver.
 
 ## Project Structure
 
-- `pico-firmware/` - Raspberry Pi Pico firmware
+- `pico-firmware/` - RP2040 firmware
   - `main.cpp` - Main firmware entry point
   - `position.cpp/h` - Position tracking implementation
   - `usb_device.cpp/h` - USB device implementation
@@ -30,7 +30,7 @@ make
 
 ## Development Notes
 
-- The project uses the Raspberry Pi Pico SDK as a git submodule
+- The project uses the RP2040 Pico SDK as a git submodule
 - Firmware implements USB device functionality for LinuxCNC communication
 - Position tracking is handled through dedicated position modules
 - Quadrature encoders are read using PIO state machines for high-speed, accurate counting
@@ -78,11 +78,11 @@ The test script will:
 
 ## Deployment
 
-### Flashing the Pico
-1. Hold the BOOTSEL button while connecting the Pico to USB
-2. The Pico will appear as a mass storage device
+### Flashing the RP2040
+1. Hold the BOOTSEL button while connecting the RP2040 board to USB
+2. The RP2040 will appear as a mass storage device
 3. Copy the generated `build/pico-hal-dro.uf2` file to the device
-4. The Pico will automatically reboot and run the firmware
+4. The RP2040 will automatically reboot and run the firmware
 
 ### LinuxCNC HAL Component
 See `linuxcnc-hal/README.md` for detailed installation and usage instructions.

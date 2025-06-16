@@ -1,8 +1,8 @@
-component pico_dro "Raspberry Pi Pico USB DRO interface";
+component pico_dro "RP2040 USB DRO interface";
 author "Claude";
 license "GPL";
 
-pin out float position-#[4] "Position values from the Pico device";
+pin out float position-#[4] "Position values from the RP2040 device";
 pin out bit connected "True when USB device is connected";
 
 option userspace yes;

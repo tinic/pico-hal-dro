@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for the Pico HAL DRO USB device.
+Test script for the RP2040 HAL DRO USB device.
 Requires pyusb: pip install pyusb
 """
 
@@ -11,7 +11,7 @@ import time
 import sys
 
 # USB device identifiers
-VENDOR_ID = 0x2E8A  # Raspberry Pi
+VENDOR_ID = 0x2E8A  # Raspberry Pi Foundation (RP2040)
 PRODUCT_ID = 0x10DF  # Our custom product ID
 
 # Request codes
@@ -249,7 +249,7 @@ def test_mode_demo(dev):
 def main():
     try:
         # Find and setup device
-        print("Looking for Pico HAL DRO device...")
+        print("Looking for RP2040 HAL DRO device...")
         dev = find_device()
         print(f"Found device: {dev}")
         
@@ -279,14 +279,14 @@ def main():
         print(f"USB Error: {e}")
         print("\nTroubleshooting tips:")
         print("1. Try running with sudo: sudo python3 test_usb_device.py")
-        print("2. Make sure the Pico is running the correct firmware")
+        print("2. Make sure the RP2040 is running the correct firmware")
         print("3. Try unplugging and reconnecting the device")
         print("4. Check if another process is using the device")
         sys.exit(1)
     except ValueError as e:
         print(f"Device Error: {e}")
         print("\nTroubleshooting tips:")
-        print("1. Make sure the Pico is connected via USB")
+        print("1. Make sure the RP2040 board is connected via USB")
         print("2. Verify the firmware is flashed correctly")
         print("3. Check the USB cable connection")
         sys.exit(1)

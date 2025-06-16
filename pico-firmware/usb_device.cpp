@@ -7,6 +7,7 @@
 #include "pico/time.h"
 #include "position.h"
 #include "tusb.h"
+#include "ws2812_led.h"
 
 // USB Descriptors
 tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
@@ -24,44 +25,13 @@ tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
                                         .iSerialNumber = 0x03,
                                         .bNumConfigurations = 0x01};
 
-// Configuration descriptor
+// Configuration descriptor using TinyUSB macros
 uint8_t const desc_configuration[] = {
-    // Configuration Descriptor
-    9,                                   // bLength
-    TUSB_DESC_CONFIGURATION,             // bDescriptorType
-    TUD_CONFIG_DESC_LEN + 9 + 7 + 7,     // wTotalLength
-    1,                                   // bNumInterfaces
-    1,                                   // bConfigurationValue
-    0,                                   // iConfiguration
-    TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,  // bmAttributes
-    100,                                 // bMaxPower (100 mA)
-
-    // Interface Descriptor
-    9,                            // bLength
-    TUSB_DESC_INTERFACE,          // bDescriptorType
-    USBDevice::VENDOR_INTERFACE,  // bInterfaceNumber
-    0,                            // bAlternateSetting
-    2,                            // bNumEndpoints
-    0xFF,                         // bInterfaceClass (Vendor Specific)
-    0x00,                         // bInterfaceSubClass
-    0x00,                         // bInterfaceProtocol
-    0,                            // iInterface
-
-    // Endpoint Descriptor (IN)
-    7,                        // bLength
-    TUSB_DESC_ENDPOINT,       // bDescriptorType
-    USBDevice::EP_VENDOR_IN,  // bEndpointAddress
-    TUSB_XFER_BULK,           // bmAttributes
-    64,                       // wMaxPacketSize
-    0,                        // bInterval
-
-    // Endpoint Descriptor (OUT)
-    7,                         // bLength
-    TUSB_DESC_ENDPOINT,        // bDescriptorType
-    USBDevice::EP_VENDOR_OUT,  // bEndpointAddress
-    TUSB_XFER_BULK,            // bmAttributes
-    64,                        // wMaxPacketSize
-    0,                         // bInterval
+    // Config: self powered with remote wakeup, max power 100mA
+    TUD_CONFIG_DESCRIPTOR(1, 1, 0, TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
+    
+    // Interface: vendor specific class
+    TUD_VENDOR_DESCRIPTOR(USBDevice::VENDOR_INTERFACE, 0, USBDevice::EP_VENDOR_OUT, USBDevice::EP_VENDOR_IN, 64)
 };
 
 // String descriptors
@@ -91,25 +61,34 @@ void USBDevice::task() noexcept {
     tud_task();
 
     // Check if we received a request
-    if (tud_vendor_n_available(VENDOR_INTERFACE)) {
-        uint8_t request_buf[2];
-        uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, &request_buf, 2);
+    while (tud_vendor_n_available(VENDOR_INTERFACE)) {
+        uint8_t request_buf[64];  // Larger buffer
+        uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, request_buf, sizeof(request_buf));
         if (count > 0) {
-            switch (request_buf[0]) {
-                case VENDOR_REQUEST_GET_POSITION:
-                    (void)send_position_data();  // Explicitly ignore result for now
-                    break;
-                case VENDOR_REQUEST_ENABLE_TEST_MODE:
-                    Position::instance().enable_test_mode(true);
-                    break;
-                case VENDOR_REQUEST_DISABLE_TEST_MODE:
-                    Position::instance().enable_test_mode(false);
-                    break;
-                case VENDOR_REQUEST_SET_TEST_PATTERN:
-                    if (count >= 2) {
-                        Position::instance().set_test_pattern(request_buf[1]);
-                    }
-                    break;
+            // Yellow flash to indicate command received (more distinct)
+            WS2812Led::set_color(255, 255, 0);  // Yellow
+            sleep_us(50000);  // 50ms
+            WS2812Led::set_off();
+            
+            // Process each byte as a potential command
+            for (uint32_t i = 0; i < count; i++) {
+                switch (request_buf[i]) {
+                    case VENDOR_REQUEST_GET_POSITION:
+                        (void)send_position_data();  // Explicitly ignore result for now
+                        break;
+                    case VENDOR_REQUEST_ENABLE_TEST_MODE:
+                        Position::instance().enable_test_mode(true);
+                        break;
+                    case VENDOR_REQUEST_DISABLE_TEST_MODE:
+                        Position::instance().enable_test_mode(false);
+                        break;
+                    case VENDOR_REQUEST_SET_TEST_PATTERN:
+                        if (i + 1 < count) {
+                            Position::instance().set_test_pattern(request_buf[i + 1]);
+                            i++; // Skip the parameter byte
+                        }
+                        break;
+                }
             }
         }
     }
@@ -131,16 +110,19 @@ std::expected<void, USBDevice::USBError> USBDevice::send_position_data() noexcep
         return std::unexpected(USBError::TransmissionFailed);
     }
 
-    // Blink LED to indicate USB traffic
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
+    // Red LED to indicate sending response
+    WS2812Led::set_red();
 
     // Send the position data
-    if (tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), bytes) != bytes) {
-        gpio_put(PICO_DEFAULT_LED_PIN, false);
+    uint32_t written = tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), bytes);
+    
+    // Keep LED on for a visible duration
+    sleep_us(100000);  // 100ms
+    WS2812Led::set_off();
+    
+    if (written != bytes) {
         return std::unexpected(USBError::TransmissionFailed);
     }
-
-    gpio_put(PICO_DEFAULT_LED_PIN, false);
     return {};
 }
 
@@ -197,10 +179,10 @@ void tud_vendor_rx_cb(uint8_t itf, uint8_t const* buffer, uint16_t bufsize) {
     (void)buffer;
     (void)bufsize;
 
-    // Blink LED to indicate USB RX traffic
-    gpio_put(PICO_DEFAULT_LED_PIN, true);
-    sleep_us(100);
-    gpio_put(PICO_DEFAULT_LED_PIN, false);
+    // Purple flash to indicate USB RX traffic (more distinct)
+    WS2812Led::set_color(128, 0, 128);  // Purple
+    sleep_us(30000);  // 30ms
+    WS2812Led::set_off();
 }
 
 void tud_vendor_tx_cb(uint8_t itf, uint32_t sent_bytes) {

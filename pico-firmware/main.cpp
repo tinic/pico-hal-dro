@@ -9,17 +9,18 @@
 #include "position.h"
 #include "quadrature_encoder.h"
 #include "usb_device.h"
+#include "ws2812_led.h"
 
 int main() {
-    // Initialize onboard LED (GPIO 25)
-    gpio_init(PICO_DEFAULT_LED_PIN);
-    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    // Initialize WS2812 LED (Waveshare RP2040 Zero)
+    WS2812Led::init();
+    WS2812Led::set_blue();  // Show blue on startup
 
     // Initialize the USB device
     if (auto result = USBDevice::instance().init(); !result) {
-        // USB init failed - this is a critical error for our DRO system
-        // In a real system, we might blink an error LED or halt
-        // For now, continue anyway as the encoders might still work locally
+        // USB init failed - show red LED
+        WS2812Led::set_red();
+        while(1) tight_loop_contents();
     }
 
     // Initialize position system (which also initializes encoders)
@@ -33,10 +34,14 @@ int main() {
     pos.set_scale(2, 0.001);  // Z axis: 0.001 mm per count
     pos.set_scale(3, 0.1);    // A axis: 0.1 degrees per count
     
-    // Optional: Enable test mode for development and testing
-    // Uncomment the following lines to start in test mode:
-    // pos.enable_test_mode(true);
-    // pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
+    // Enable test mode for development and testing
+    pos.enable_test_mode(true);
+    pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
+
+    // Show green to indicate ready
+    WS2812Led::set_green();
+    sleep_ms(1000);
+    WS2812Led::set_off();
 
     while (1) {
         USBDevice::instance().task();

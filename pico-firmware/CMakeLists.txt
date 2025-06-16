@@ -35,6 +35,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     position.cpp
     usb_device.cpp
     quadrature_encoder.cpp
+    ws2812_led.cpp
 )
 
 target_compile_options(${CMAKE_PROJECT_NAME} PUBLIC
@@ -69,6 +70,7 @@ pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
 
 pico_add_uf2_output(${CMAKE_PROJECT_NAME})
 pico_generate_pio_header(${CMAKE_PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
+pico_generate_pio_header(${CMAKE_PROJECT_NAME} ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 pico_add_extra_outputs(${CMAKE_PROJECT_NAME})
 
 execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} OUTPUT_VARIABLE GIT_SHORT_SHA OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -84,3 +86,15 @@ set(CMAKE_SIZE arm-none-eabi-size)
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_SIZE} ${CMAKE_PROJECT_NAME}.elf
     USES_TERMINAL)
+
+add_custom_target(flash
+    DEPENDS ${CMAKE_PROJECT_NAME}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_PROJECT_NAME}.uf2 /Volumes/RPI-RP2/${CMAKE_PROJECT_NAME}.uf2
+    USES_TERMINAL
+)
+
+add_custom_target(flash-quick
+    DEPENDS ${CMAKE_PROJECT_NAME}
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_PROJECT_NAME}.uf2 /Volumes/RPI-RP2/
+    USES_TERMINAL
+)

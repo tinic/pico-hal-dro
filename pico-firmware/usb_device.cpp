@@ -91,19 +91,34 @@ void USBDevice::task() noexcept {
     
     // Check if we received a request
     if (tud_vendor_n_available(VENDOR_INTERFACE)) {
-        uint8_t request;
-        tud_vendor_n_read(VENDOR_INTERFACE, &request, 1);
+        uint8_t buffer[2];
+        uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, buffer, sizeof(buffer));
         
-        switch (request) {
-            case VENDOR_REQUEST_GET_POSITION:
-                (void)send_position_data(); // Explicitly ignore result for now
-                break;
-            case VENDOR_REQUEST_START_STREAM:
-                continuous_stream = true;
-                break;
-            case VENDOR_REQUEST_STOP_STREAM:
-                continuous_stream = false;
-                break;
+        if (count > 0) {
+            uint8_t request = buffer[0];
+            
+            switch (request) {
+                case VENDOR_REQUEST_GET_POSITION:
+                    (void)send_position_data(); // Explicitly ignore result for now
+                    break;
+                case VENDOR_REQUEST_START_STREAM:
+                    continuous_stream = true;
+                    break;
+                case VENDOR_REQUEST_STOP_STREAM:
+                    continuous_stream = false;
+                    break;
+                case VENDOR_REQUEST_ENABLE_TEST_MODE:
+                    Position::instance().enable_test_mode(true);
+                    break;
+                case VENDOR_REQUEST_DISABLE_TEST_MODE:
+                    Position::instance().enable_test_mode(false);
+                    break;
+                case VENDOR_REQUEST_SET_TEST_PATTERN:
+                    if (count >= 2) {
+                        Position::instance().set_test_pattern(buffer[1]);
+                    }
+                    break;
+            }
         }
     }
     

@@ -18,6 +18,9 @@ public:
     static constexpr uint8_t VENDOR_REQUEST_GET_POSITION = 0x01;
     static constexpr uint8_t VENDOR_REQUEST_START_STREAM = 0x02;
     static constexpr uint8_t VENDOR_REQUEST_STOP_STREAM = 0x03;
+    static constexpr uint8_t VENDOR_REQUEST_ENABLE_TEST_MODE = 0x04;
+    static constexpr uint8_t VENDOR_REQUEST_DISABLE_TEST_MODE = 0x05;
+    static constexpr uint8_t VENDOR_REQUEST_SET_TEST_PATTERN = 0x06;
     
     enum class USBError {
         NotInitialized,

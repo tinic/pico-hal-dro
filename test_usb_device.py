@@ -18,6 +18,15 @@ PRODUCT_ID = 0x10DF  # Our custom product ID
 VENDOR_REQUEST_GET_POSITION = 0x01
 VENDOR_REQUEST_START_STREAM = 0x02
 VENDOR_REQUEST_STOP_STREAM = 0x03
+VENDOR_REQUEST_ENABLE_TEST_MODE = 0x04
+VENDOR_REQUEST_DISABLE_TEST_MODE = 0x05
+VENDOR_REQUEST_SET_TEST_PATTERN = 0x06
+
+# Test patterns
+TEST_PATTERN_SINE_WAVE = 0
+TEST_PATTERN_CIRCULAR = 1
+TEST_PATTERN_LINEAR_RAMP = 2
+TEST_PATTERN_RANDOM_WALK = 3
 
 # Endpoints
 EP_IN = 0x81
@@ -83,6 +92,45 @@ def stream_positions(dev, duration=5):
         dev.write(EP_OUT, [VENDOR_REQUEST_STOP_STREAM])
         print(f"Received {count} position updates")
 
+def test_mode_demo(dev):
+    """Demonstrate test mode functionality"""
+    print("\nTesting test mode functionality:")
+    
+    patterns = [
+        (TEST_PATTERN_SINE_WAVE, "Sine Wave"),
+        (TEST_PATTERN_CIRCULAR, "Circular Motion"),
+        (TEST_PATTERN_LINEAR_RAMP, "Linear Ramp"),
+        (TEST_PATTERN_RANDOM_WALK, "Random Walk")
+    ]
+    
+    for pattern_id, pattern_name in patterns:
+        print(f"\n--- Testing {pattern_name} Pattern ---")
+        
+        # Enable test mode
+        dev.write(EP_OUT, [VENDOR_REQUEST_ENABLE_TEST_MODE])
+        time.sleep(0.1)
+        
+        # Set pattern
+        dev.write(EP_OUT, [VENDOR_REQUEST_SET_TEST_PATTERN, pattern_id])
+        time.sleep(0.1)
+        
+        # Read a few positions
+        for i in range(10):
+            positions = get_position_once(dev)
+            if positions:
+                print(f"[{i+1:2d}] X:{positions[0]:8.3f} Y:{positions[1]:8.3f} Z:{positions[2]:8.3f} A:{positions[3]:8.1f}")
+            time.sleep(0.2)
+    
+    # Disable test mode
+    print("\nDisabling test mode...")
+    dev.write(EP_OUT, [VENDOR_REQUEST_DISABLE_TEST_MODE])
+    time.sleep(0.1)
+    
+    # Verify test mode is off
+    positions = get_position_once(dev)
+    if positions:
+        print(f"Final positions: X:{positions[0]:8.3f} Y:{positions[1]:8.3f} Z:{positions[2]:8.3f} A:{positions[3]:8.1f}")
+
 def main():
     try:
         # Find and setup device
@@ -102,6 +150,9 @@ def main():
         # Test streaming
         print("\nTesting position streaming:")
         stream_positions(dev, 5)
+        
+        # Test the new test mode functionality
+        test_mode_demo(dev)
         
     except Exception as e:
         print(f"Error: {e}")

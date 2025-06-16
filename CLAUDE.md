@@ -100,5 +100,34 @@ The device implements a vendor-specific USB interface with the following command
 - **0x01** - Get Position: Returns 32 bytes (4 doubles) with current position values
 - **0x02** - Start Stream: Begins continuous streaming of position data at 100Hz
 - **0x03** - Stop Stream: Stops the continuous stream
+- **0x04** - Enable Test Mode: Enables test mode for simulated position data
+- **0x05** - Disable Test Mode: Disables test mode and returns to encoder data
+- **0x06** - Set Test Pattern: Sets the test pattern (requires 1 byte parameter)
 
 Position data format: 4 double-precision floating point values (little-endian)
+
+## Test Mode
+
+The firmware includes a test mode feature that simulates realistic DRO/glass gauge behavior for development and testing purposes.
+
+### Test Patterns
+
+- **0 - Sine Wave**: Sinusoidal motion on all axes with different frequencies and amplitudes
+- **1 - Circular**: XY circular motion with Z oscillation and A rotation
+- **2 - Linear Ramp**: Constant velocity motion on all axes
+- **3 - Random Walk**: Random position changes simulating measurement noise
+
+### Usage
+
+Test mode can be controlled via USB commands or enabled in firmware:
+
+```cpp
+// Enable in firmware (main.cpp)
+pos.enable_test_mode(true);
+pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
+```
+
+Or via USB commands in the test script:
+```bash
+python3 test_usb_device.py  # Now includes test mode demonstration
+```

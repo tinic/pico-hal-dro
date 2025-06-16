@@ -27,6 +27,11 @@ int main() {
     pos.set_scale(1, 0.001);  // Y axis: 0.001 mm per count
     pos.set_scale(2, 0.001);  // Z axis: 0.001 mm per count
     pos.set_scale(3, 0.1);    // A axis: 0.1 degrees per count
+    
+    // Optional: Enable test mode for development and testing
+    // Uncomment the following lines to start in test mode:
+    // pos.enable_test_mode(true);
+    // pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
 
     while (1) {
         USBDevice::instance().task();

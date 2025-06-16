@@ -23,8 +23,6 @@ option extra_setup yes;
 #define EP_OUT 0x01
 
 #define VENDOR_REQUEST_GET_POSITION 0x01
-#define VENDOR_REQUEST_START_STREAM 0x02
-#define VENDOR_REQUEST_STOP_STREAM 0x03
 
 static libusb_device_handle *dev_handle = NULL;
 static libusb_context *ctx = NULL;
@@ -61,25 +59,37 @@ void user_mainloop(void) {
                         dev_handle = NULL;
                     } else {
                         connected = 1;
-                        // Start streaming
-                        buffer[0] = VENDOR_REQUEST_START_STREAM;
-                        libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 1, &actual_length, 100);
                     }
                 } else {
                     connected = 0;
                 }
             }
             
-            // Read position data if connected
+            // Request and read position data if connected
             if (dev_handle) {
-                r = libusb_bulk_transfer(dev_handle, EP_IN, buffer, 64, &actual_length, 10);
-                if (r == 0 && actual_length >= 32) {
-                    // Parse position data
-                    double *positions = (double*)buffer;
-                    position(0) = positions[0];
-                    position(1) = positions[1];
-                    position(2) = positions[2];
-                    position(3) = positions[3];
+                // Send position request
+                buffer[0] = VENDOR_REQUEST_GET_POSITION;
+                r = libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 1, &actual_length, 0);
+                if (r == 0) {
+                    // Read position response
+                    r = libusb_bulk_transfer(dev_handle, EP_IN, buffer, 64, &actual_length, 0);
+                    if (r == 0 && actual_length >= 32) {
+                        // Parse position data
+                        double *positions = (double*)buffer;
+                        position(0) = positions[0];
+                        position(1) = positions[1];
+                        position(2) = positions[2];
+                        position(3) = positions[3];
+                    } else if (r == LIBUSB_ERROR_TIMEOUT) {
+                        // No response yet, continue with last known positions
+                    } else if (r == LIBUSB_ERROR_NO_DEVICE || r == LIBUSB_ERROR_IO) {
+                        // Device disconnected
+                        libusb_close(dev_handle);
+                        dev_handle = NULL;
+                        connected = 0;
+                    }
+                } else if (r == LIBUSB_ERROR_TIMEOUT) {
+                    // Request timeout, continue
                 } else if (r == LIBUSB_ERROR_NO_DEVICE || r == LIBUSB_ERROR_IO) {
                     // Device disconnected
                     libusb_close(dev_handle);
@@ -89,17 +99,12 @@ void user_mainloop(void) {
             }
         }
         
-        usleep(1000); // 1ms sleep
+        usleep(10); // 10μs sleep
     }
 }
 
 void rtapi_app_exit(void) {
     if (dev_handle) {
-        // Stop streaming
-        uint8_t buffer[1] = {VENDOR_REQUEST_STOP_STREAM};
-        int actual_length;
-        libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 1, &actual_length, 100);
-        
         libusb_release_interface(dev_handle, 0);
         libusb_close(dev_handle);
     }

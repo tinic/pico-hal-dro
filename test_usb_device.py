@@ -16,8 +16,6 @@ PRODUCT_ID = 0x10DF  # Our custom product ID
 
 # Request codes
 VENDOR_REQUEST_GET_POSITION = 0x01
-VENDOR_REQUEST_START_STREAM = 0x02
-VENDOR_REQUEST_STOP_STREAM = 0x03
 
 # Endpoints
 EP_IN = 0x81
@@ -58,30 +56,33 @@ def get_position_once(dev):
         return positions
     return None
 
-def stream_positions(dev, duration=5):
-    """Stream position data continuously"""
-    print(f"Starting position stream for {duration} seconds...")
-    
-    # Start streaming
-    dev.write(EP_OUT, [VENDOR_REQUEST_START_STREAM])
+def poll_positions(dev, duration=5, frequency=10):
+    """Poll position data at specified frequency"""
+    print(f"Polling positions for {duration} seconds at {frequency} Hz...")
     
     start_time = time.time()
     count = 0
+    interval = 1.0 / frequency
     
-    try:
-        while time.time() - start_time < duration:
-            try:
-                data = dev.read(EP_IN, 64, timeout=100)
-                if len(data) >= 32:
-                    positions = struct.unpack('<4d', bytes(data[:32]))
-                    count += 1
-                    print(f"[{count:4d}] Positions: {positions}")
-            except usb.core.USBTimeoutError:
-                pass
-    finally:
-        # Stop streaming
-        dev.write(EP_OUT, [VENDOR_REQUEST_STOP_STREAM])
-        print(f"Received {count} position updates")
+    while time.time() - start_time < duration:
+        try:
+            # Request position
+            dev.write(EP_OUT, [VENDOR_REQUEST_GET_POSITION])
+            
+            # Read response
+            data = dev.read(EP_IN, 64, timeout=100)
+            if len(data) >= 32:
+                positions = struct.unpack('<4d', bytes(data[:32]))
+                count += 1
+                print(f"[{count:4d}] Positions: {positions}")
+            
+            time.sleep(interval)
+        except usb.core.USBTimeoutError:
+            print("Timeout reading position")
+        except Exception as e:
+            print(f"Error: {e}")
+    
+    print(f"Received {count} position updates")
 
 def main():
     try:
@@ -99,9 +100,9 @@ def main():
         if positions:
             print(f"Positions: {positions}")
         
-        # Test streaming
-        print("\nTesting position streaming:")
-        stream_positions(dev, 5)
+        # Test polling
+        print("\nTesting position polling:")
+        poll_positions(dev, 5, 10)
         
     except Exception as e:
         print(f"Error: {e}")

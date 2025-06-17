@@ -21,6 +21,10 @@ class USBDevice {
     static constexpr uint8_t VENDOR_REQUEST_GET_SCALE = 0x04;      // Get all scale factors
     static constexpr uint8_t VENDOR_REQUEST_RESET_ENCODER = 0x05;  // Reset encoder position to zero
     
+    // 32-bit sentinel values to validate USB data integrity - each message type has unique sentinel
+    static constexpr uint32_t POSITION_DATA_SENTINEL = 0x3F8A7C91;  // Sentinel for position data responses
+    static constexpr uint32_t SCALE_DATA_SENTINEL = 0x7B2D4E8F;     // Sentinel for scale data responses
+    
     enum class USBError {
         NotInitialized,
         TransmissionFailed,

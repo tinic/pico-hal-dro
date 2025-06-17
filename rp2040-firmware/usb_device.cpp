@@ -62,12 +62,12 @@ void USBDevice::task() noexcept {
 
     // Check if we received a request
     while (tud_vendor_n_available(VENDOR_INTERFACE)) {
-        uint8_t request_buf[64];  // Larger buffer
-        uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, request_buf, sizeof(request_buf));
+        std::array<uint8_t, 64> request_buf{};  // Larger buffer
+        uint32_t count = tud_vendor_n_read(VENDOR_INTERFACE, request_buf.data(), request_buf.size());
         if (count > 0) {
             static bool flip = false;
             if (flip) {
-                WS2812Led::set_color(255, 255, 0);  // Yellow
+                WS2812Led::set_color(64, 64, 0);  // Yellow
             } else {
                 WS2812Led::set_off();
             }
@@ -76,7 +76,7 @@ void USBDevice::task() noexcept {
             for (uint32_t i = 0; i < count; i++) {
                 switch (request_buf[i]) {
                     case VENDOR_REQUEST_GET_POSITION:
-                        (void)send_position_data();  // Explicitly ignore result for now
+                        (void)send_position_data();
                         break;
                     case VENDOR_REQUEST_SET_TEST_MODE:
                         if (i + 1 < count) {
@@ -109,7 +109,7 @@ void USBDevice::task() noexcept {
                         if (i + 1 < count) {
                             uint8_t encoder_index = request_buf[i + 1];
                             if (encoder_index < 4) {
-                                Position::instance().reset_encoder(encoder_index);
+                                (void)Position::instance().reset_encoder(encoder_index);
                             }
                             i++;  // Skip the parameter byte
                         }
@@ -125,11 +125,12 @@ bool USBDevice::send_position_data() noexcept {
         return false;
     }
 
-    if (!tud_ready()) {
+    // Wait until ready
+    if (!tud_vendor_n_mounted(VENDOR_INTERFACE)) {
         return false;
     }
 
-    std::array<uint8_t, 64> buffer{};
+    static std::array<uint8_t, 64> buffer{};
     size_t bytes = 0;
 
     if (!Position::instance().get(buffer.data(), bytes)) {
@@ -138,7 +139,7 @@ bool USBDevice::send_position_data() noexcept {
 
     // Send the position data
     uint32_t written = tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), bytes);
-    if (written != bytes) {
+    if (bytes != written) {
         return false;
     }
     return true;
@@ -154,18 +155,23 @@ bool USBDevice::send_scale_data() noexcept {
         return false;
     }
 
-    // Prepare scale data buffer (4 doubles = 32 bytes)
-    uint8_t buffer[32];
+    // Prepare scale data buffer: [sentinel:4 bytes][scales:32 bytes] = 36 bytes total
+    static std::array<uint8_t, 36> buffer{};
     Position& pos = Position::instance();
     
+    // Write sentinel first
+    uint32_t sentinel = SCALE_DATA_SENTINEL;
+    memcpy(buffer.data(), &sentinel, sizeof(sentinel));
+    
+    // Write scale data after sentinel
     for (size_t i = 0; i < 4; i++) {
         double scale = pos.get_scale(i);
-        memcpy(&buffer[i * sizeof(double)], &scale, sizeof(double));
+        memcpy(&buffer[sizeof(sentinel) + i * sizeof(double)], &scale, sizeof(double));
     }
 
     // Send the data
-    uint32_t result = tud_vendor_n_write(VENDOR_INTERFACE, buffer, sizeof(buffer));
-    if (result != sizeof(buffer)) {
+    uint32_t written = tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), buffer.size());
+    if (buffer.size() != written) {
         return false;
     }
 

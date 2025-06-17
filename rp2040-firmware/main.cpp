@@ -39,14 +39,11 @@ int main() {
     pos.set_scale(2, 0.001);  // Z axis: 0.001 mm per count
     pos.set_scale(3, 0.1);    // A axis: 0.1 degrees per count
     
-    // Enable test mode for development and testing
-    pos.enable_test_mode(true);
-    pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
+    // Test mode is disabled by default - controlled via USB commands
+    pos.enable_test_mode(false);
 
     // Show green to indicate ready
     WS2812Led::set_green();
-    sleep_ms(1000);
-    WS2812Led::set_off();
 
     while (1) {
         USBDevice::instance().task();

@@ -17,6 +17,11 @@ PRODUCT_ID = 0xC0DE  # Our custom product ID
 # Request codes
 VENDOR_REQUEST_GET_POSITION = 0x01
 VENDOR_REQUEST_SET_TEST_MODE = 0x02
+VENDOR_REQUEST_GET_SCALE = 0x04
+
+# Sentinel values for data validation
+POSITION_DATA_SENTINEL = 0x3F8A7C91
+SCALE_DATA_SENTINEL = 0x7B2D4E8F
 
 # Test patterns
 TEST_PATTERN_SINE_WAVE = 0
@@ -76,12 +81,25 @@ def get_position_once(dev):
         # Read response
         data = dev.read(EP_IN, 64, timeout=100)
         
-        # Parse the data (4 doubles = 32 bytes)
-        if len(data) >= 32:
-            positions = struct.unpack('<4d', bytes(data[:32]))
+        # Parse the data: [sentinel:4 bytes][positions:32 bytes] = 36 bytes total
+        if len(data) >= 36:
+            # Validate sentinel first
+            sentinel = struct.unpack('<L', bytes(data[:4]))[0]
+            if sentinel != POSITION_DATA_SENTINEL:
+                print(f"Warning: Invalid position data sentinel 0x{sentinel:08X}, expected 0x{POSITION_DATA_SENTINEL:08X}")
+                # Clear USB read queue to remove any stale data
+                try:
+                    while True:
+                        dev.read(EP_IN, 64, timeout=1)
+                except usb.core.USBTimeoutError:
+                    pass  # Queue is now empty
+                return None
+            
+            # Extract position data after sentinel
+            positions = struct.unpack('<4d', bytes(data[4:36]))
             return positions
         elif len(data) > 0:
-            print(f"Warning: Received {len(data)} bytes, expected 32")
+            print(f"Warning: Received {len(data)} bytes, expected 36")
             
     except usb.core.USBTimeoutError:
         pass  # Timeout is normal, just return None
@@ -103,15 +121,68 @@ def get_position_fast(dev):
         # Read response with short timeout
         data = dev.read(EP_IN, 64, timeout=10)
         
-        # Parse the data (4 doubles = 32 bytes)
-        if len(data) >= 32:
-            positions = struct.unpack('<4d', bytes(data[:32]))
+        # Parse the data: [sentinel:4 bytes][positions:32 bytes] = 36 bytes total
+        if len(data) >= 36:
+            # Validate sentinel first
+            sentinel = struct.unpack('<L', bytes(data[:4]))[0]
+            if sentinel != POSITION_DATA_SENTINEL:
+                # Clear USB read queue to remove any stale data (silently in fast mode)
+                try:
+                    while True:
+                        dev.read(EP_IN, 64, timeout=1)
+                except usb.core.USBTimeoutError:
+                    pass  # Queue is now empty
+                return None  # Invalid data, silently ignore in fast mode
+            
+            # Extract position data after sentinel
+            positions = struct.unpack('<4d', bytes(data[4:36]))
             return positions
             
     except usb.core.USBTimeoutError:
         pass  # Timeout is normal, just return None
     except Exception as e:
         pass  # Silently ignore errors in fast mode
+        
+    return None
+
+def get_scale_data(dev):
+    """Get scale data with sentinel validation"""
+    try:
+        # Send request
+        result = dev.write(EP_OUT, [VENDOR_REQUEST_GET_SCALE], timeout=100)
+        if result != 1:
+            return None
+        
+        # Wait for processing
+        time.sleep(0.05)
+        
+        # Read response
+        data = dev.read(EP_IN, 64, timeout=100)
+        
+        # Parse the data: [sentinel:4 bytes][scales:32 bytes] = 36 bytes total
+        if len(data) >= 36:
+            # Validate sentinel first
+            sentinel = struct.unpack('<L', bytes(data[:4]))[0]
+            if sentinel != SCALE_DATA_SENTINEL:
+                print(f"Warning: Invalid scale data sentinel 0x{sentinel:08X}, expected 0x{SCALE_DATA_SENTINEL:08X}")
+                # Clear USB read queue to remove any stale data
+                try:
+                    while True:
+                        dev.read(EP_IN, 64, timeout=1)
+                except usb.core.USBTimeoutError:
+                    pass  # Queue is now empty
+                return None
+            
+            # Extract scale data after sentinel
+            scales = struct.unpack('<4d', bytes(data[4:36]))
+            return scales
+        elif len(data) > 0:
+            print(f"Warning: Received {len(data)} bytes, expected 36")
+            
+    except usb.core.USBTimeoutError:
+        pass  # Timeout is normal, just return None
+    except Exception as e:
+        print(f"USB error: {e}")
         
     return None
 
@@ -264,6 +335,14 @@ def main():
             print(f"Positions: X:{positions[0]:8.3f} Y:{positions[1]:8.3f} Z:{positions[2]:8.3f} A:{positions[3]:8.1f}")
         else:
             print("No response received")
+        
+        # Test scale data read
+        print("\nTesting scale data read:")
+        scales = get_scale_data(dev)
+        if scales:
+            print(f"Scales: X:{scales[0]:8.6f} Y:{scales[1]:8.6f} Z:{scales[2]:8.6f} A:{scales[3]:8.6f}")
+        else:
+            print("No scale response received")
         
         # Test position polling at a reasonable rate
         print("\nTesting position polling:")

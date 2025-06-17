@@ -1,6 +1,7 @@
 
 #include "position.h"
 #include "quadrature_encoder.h"
+#include "usb_device.h"
 #include "pico/time.h"
 #include <cstring>
 #include <cmath>
@@ -38,9 +39,15 @@ bool Position::get(uint8_t* out, size_t& bytes) const noexcept {
         const_cast<Position*>(this)->update_from_encoders();
     }
     
-    bytes = sizeof(positions);
+    // Data format: [sentinel:4 bytes][positions:32 bytes] = 36 bytes total
+    bytes = sizeof(uint32_t) + sizeof(positions);
     if (out != nullptr) {
-        memcpy(out, reinterpret_cast<const uint8_t*>(positions.data()), sizeof(positions));
+        // Write sentinel first
+        uint32_t sentinel = USBDevice::POSITION_DATA_SENTINEL;
+        memcpy(out, &sentinel, sizeof(sentinel));
+        
+        // Write position data after sentinel
+        memcpy(out + sizeof(sentinel), reinterpret_cast<const uint8_t*>(positions.data()), sizeof(positions));
     }
 
     return true;

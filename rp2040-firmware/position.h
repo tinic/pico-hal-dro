@@ -41,6 +41,7 @@ class Position {
     static Position& instance() noexcept;
 
     // Returns true on success, false on error
+    // Data format: [sentinel:4 bytes][positions:32 bytes] = 36 bytes total
     [[nodiscard]] bool get(uint8_t* out, size_t& bytes) const noexcept;
 
     void set(size_t pos, double value) noexcept {

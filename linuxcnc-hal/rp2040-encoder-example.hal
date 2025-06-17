@@ -1,0 +1,35 @@
+# Example HAL configuration for RP2040 Quadrature Encoder Interface
+# This shows how to integrate the RP2040 encoder interface with LinuxCNC
+
+# Load the RP2040 encoder component
+loadusr -W rp2040_encoder
+
+# Create signals for encoder position data
+newsig x-encoder-pos float
+newsig y-encoder-pos float
+newsig z-encoder-pos float
+newsig a-encoder-pos float
+newsig encoder-connected bit
+
+# Connect RP2040 encoder outputs to signals
+net x-encoder-pos <= rp2040_encoder.0.position-0
+net y-encoder-pos <= rp2040_encoder.0.position-1
+net z-encoder-pos <= rp2040_encoder.0.position-2
+net a-encoder-pos <= rp2040_encoder.0.position-3
+net encoder-connected <= rp2040_encoder.0.connected
+
+# Example: Connect to PyVCP panel for DRO display
+# net x-encoder-pos => pyvcp.x-dro
+# net y-encoder-pos => pyvcp.y-dro
+# net z-encoder-pos => pyvcp.z-dro
+# net a-encoder-pos => pyvcp.a-dro
+# net encoder-connected => pyvcp.encoder-status-led
+
+# Example: Use for axis feedback (be careful with this!)
+# net x-encoder-pos => axis.0.motor-pos-fb
+# net y-encoder-pos => axis.1.motor-pos-fb
+# net z-encoder-pos => axis.2.motor-pos-fb
+
+# Show component status
+show comp rp2040_encoder
+show pin rp2040_encoder

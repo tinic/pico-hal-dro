@@ -38,7 +38,7 @@ uint8_t const desc_configuration[] = {
 char const* string_desc_arr[] = {
     (const char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
     "Raspberry Pi",              // 1: Manufacturer
-    "Pico HAL DRO Device",       // 2: Product
+    "Pico HAL Encoder Interface", // 2: Product
     "1234567890",                // 3: Serial
 };
 

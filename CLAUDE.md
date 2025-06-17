@@ -1,6 +1,6 @@
-# RP2040 LinuxCNC HAL USB Device
+# RP2040 LinuxCNC HAL Quadrature Encoder Interface
 
-This project implements a USB device on RP2040-based boards that interfaces with LinuxCNC through a HAL (Hardware Abstraction Layer) driver.
+This project implements a USB quadrature encoder interface on RP2040-based boards that connects with LinuxCNC through a HAL (Hardware Abstraction Layer) component.
 
 ## Project Structure
 
@@ -12,9 +12,9 @@ This project implements a USB device on RP2040-based boards that interfaces with
   - `CMakeLists.txt` - CMake build configuration
   - `pico-sdk/` - Pico SDK submodule
 - `linuxcnc-hal/` - LinuxCNC HAL component
-  - `rp2040_dro.comp` - HAL component source
+  - `rp2040_encoder.comp` - HAL component source
   - `README.md` - Installation and usage instructions
-  - `rp2040-dro-example.hal` - Example HAL configuration
+  - `rp2040-encoder-example.hal` - Example HAL configuration
 - `test_usb_device.py` - Python test script for USB communication
 
 ## Build Commands
@@ -62,7 +62,7 @@ Scale factors convert encoder counts to meaningful units. Configure in main.cpp:
 
 ## Testing
 
-### USB Device Testing
+### USB Encoder Interface Testing
 ```bash
 # Install pyusb for testing
 pip install pyusb
@@ -81,7 +81,7 @@ The test script will:
 ### Flashing the RP2040
 1. Hold the BOOTSEL button while connecting the RP2040 board to USB
 2. The RP2040 will appear as a mass storage device
-3. Copy the generated `build/pico-hal-dro.uf2` file to the device
+3. Copy the generated `build/rp2040-hal-encoder.uf2` file to the device
 4. The RP2040 will automatically reboot and run the firmware
 
 ### LinuxCNC HAL Component
@@ -90,7 +90,7 @@ See `linuxcnc-hal/README.md` for detailed installation and usage instructions.
 Quick start:
 ```bash
 cd linuxcnc-hal
-sudo halcompile --install rp2040_dro.comp
+sudo halcompile --install rp2040_encoder.comp
 ```
 
 ## USB Protocol
@@ -108,7 +108,7 @@ Position data format: 4 double-precision floating point values (little-endian)
 
 ## Test Mode
 
-The firmware includes a test mode feature that simulates realistic DRO/glass gauge behavior for development and testing purposes.
+The firmware includes a test mode feature that simulates realistic quadrature encoder behavior for development and testing purposes.
 
 ### Test Patterns
 

@@ -26,7 +26,7 @@ set(CMAKE_CXX_STANDARD 23)
 
 include(pico-sdk/pico_sdk_init.cmake)
 
-project(rp2040-hal-dro)
+project(rp2040-hal-encoder)
 
 pico_sdk_init()
 

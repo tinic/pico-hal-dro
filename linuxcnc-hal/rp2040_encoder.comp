@@ -117,7 +117,6 @@ void user_mainloop(void) {
                         libusb_close(dev_handle);
                         dev_handle = NULL;
                     } else {
-                        connected = 1;
                         printf("rp2040_encoder: Device connected and ready\n");
                         fflush(stdout);
                         
@@ -131,6 +130,7 @@ void user_mainloop(void) {
                         
                         // Give device time to initialize
                         usleep(2000000); // 2 second delay
+                        connected = 1;
                     }
                 } else {
                     connected = 0;

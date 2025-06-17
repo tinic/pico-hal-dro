@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <expected>
 
 #include "hardware/pio.h"
 #include "pico/time.h"
@@ -30,16 +29,20 @@ class QuadratureEncoder {
     static QuadratureEncoder& instance();
 
     // Initialize all encoders
-    [[nodiscard]] std::expected<void, EncoderError> init() noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool init() noexcept;
 
     // Get current count for a specific encoder (64-bit)
-    [[nodiscard]] std::expected<int64_t, EncoderError> get_count(size_t encoder_idx) const noexcept;
+    // Returns true on success, false on error. Count is returned via output parameter
+    [[nodiscard]] bool get_count(size_t encoder_idx, int64_t& count) const noexcept;
 
     // Get counts for all encoders at once (more efficient)
-    [[nodiscard]] std::expected<std::array<int64_t, kNumEncoders>, EncoderError> get_all_counts() const noexcept;
+    // Returns true on success, false on error. Counts are returned via output parameter
+    [[nodiscard]] bool get_all_counts(std::array<int64_t, kNumEncoders>& counts) const noexcept;
 
     // Reset count for a specific encoder
-    [[nodiscard]] std::expected<void, EncoderError> reset_count(size_t encoder_idx) noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool reset_count(size_t encoder_idx) noexcept;
 
     // Set the maximum expected step rate (0 = no limit)
     constexpr void set_max_step_rate(int max_rate) noexcept {
@@ -68,7 +71,8 @@ class QuadratureEncoder {
     int max_step_rate = 0;  // Maximum expected steps per second
 
     // Load the PIO program and configure state machines
-    [[nodiscard]] std::expected<void, EncoderError> setup_pio() noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool setup_pio() noexcept;
 
     // Update a single encoder's overflow status
     void update_encoder_overflow(size_t encoder_idx, int32_t raw_count) noexcept;

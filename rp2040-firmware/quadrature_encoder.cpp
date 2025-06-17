@@ -9,12 +9,12 @@ QuadratureEncoder& QuadratureEncoder::instance() {
     return encoder;
 }
 
-std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::init() noexcept {
+bool QuadratureEncoder::init() noexcept {
     if (initialized)
-        return {};
+        return true;
 
-    if (auto result = setup_pio(); !result) {
-        return std::unexpected(result.error());
+    if (!setup_pio()) {
+        return false;
     }
 
     // Initialize timing for overflow checks
@@ -31,10 +31,10 @@ std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::init() n
     }
 
     initialized = true;
-    return {};
+    return true;
 }
 
-std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::setup_pio() noexcept {
+bool QuadratureEncoder::setup_pio() noexcept {
     // Add the program to PIO instruction memory
     uint offset = pio_add_program(pio, &quadrature_encoder_program);
 
@@ -42,7 +42,7 @@ std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::setup_pi
     for (size_t i = 0; i < kNumEncoders; i++) {
         uint sm = pio_claim_unused_sm(pio, true);
         if (sm == static_cast<uint>(-1)) {
-            return std::unexpected(EncoderError::PIOError);
+            return false;
         }
         sm_nums[i] = sm;
 
@@ -50,7 +50,7 @@ std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::setup_pi
         quadrature_encoder_program_init(pio, sm, offset, pin_base, max_step_rate);
     }
 
-    return {};
+    return true;
 }
 
 constexpr bool QuadratureEncoder::detect_overflow(int32_t old_count, int32_t new_count) noexcept {
@@ -117,13 +117,10 @@ void QuadratureEncoder::update_overflow_check() noexcept {
     }
 }
 
-std::expected<std::array<int64_t, QuadratureEncoder::kNumEncoders>, QuadratureEncoder::EncoderError>
-QuadratureEncoder::get_all_counts() const noexcept {
+bool QuadratureEncoder::get_all_counts(std::array<int64_t, kNumEncoders>& counts) const noexcept {
     if (!initialized) {
-        return std::unexpected(EncoderError::NotInitialized);
+        return false;
     }
-
-    std::array<int64_t, kNumEncoders> counts{};
 
     // Request counts from all encoders
     for (size_t i = 0; i < kNumEncoders; i++) {
@@ -137,16 +134,15 @@ QuadratureEncoder::get_all_counts() const noexcept {
         counts[i] = full_counts[i] - count_offsets[i];
     }
 
-    return counts;
+    return true;
 }
 
-std::expected<int64_t, QuadratureEncoder::EncoderError> QuadratureEncoder::get_count(
-    size_t encoder_idx) const noexcept {
+bool QuadratureEncoder::get_count(size_t encoder_idx, int64_t& count) const noexcept {
     if (!initialized) {
-        return std::unexpected(EncoderError::NotInitialized);
+        return false;
     }
     if (encoder_idx >= kNumEncoders) {
-        return std::unexpected(EncoderError::InvalidIndex);
+        return false;
     }
 
     // Get current raw count and update overflow detection
@@ -154,15 +150,16 @@ std::expected<int64_t, QuadratureEncoder::EncoderError> QuadratureEncoder::get_c
     const_cast<QuadratureEncoder*>(this)->update_encoder_overflow(encoder_idx, raw_count);
 
     // Return the 64-bit count minus offset
-    return full_counts[encoder_idx] - count_offsets[encoder_idx];
+    count = full_counts[encoder_idx] - count_offsets[encoder_idx];
+    return true;
 }
 
-std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::reset_count(size_t encoder_idx) noexcept {
+bool QuadratureEncoder::reset_count(size_t encoder_idx) noexcept {
     if (!initialized) {
-        return std::unexpected(EncoderError::NotInitialized);
+        return false;
     }
     if (encoder_idx >= kNumEncoders) {
-        return std::unexpected(EncoderError::InvalidIndex);
+        return false;
     }
 
     // Update overflow status first
@@ -172,5 +169,5 @@ std::expected<void, QuadratureEncoder::EncoderError> QuadratureEncoder::reset_co
     // Set the current full count as the offset
     count_offsets[encoder_idx] = full_counts[encoder_idx];
 
-    return {};
+    return true;
 }

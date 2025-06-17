@@ -22,7 +22,7 @@ int main() {
     gpio_put(8, 0);  // OE low = outputs disabled (high-Z state)
 
     // Initialize the USB device
-    if (auto result = USBDevice::instance().init(); !result) {
+    if (!USBDevice::instance().init()) {
         // USB init failed - show red LED
         WS2812Led::set_red();
         while(1) tight_loop_contents();

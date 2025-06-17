@@ -4,7 +4,6 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <expected>
 
 class Position {
  private:
@@ -41,7 +40,8 @@ class Position {
 
     static Position& instance() noexcept;
 
-    [[nodiscard]] std::expected<void, PositionError> get(uint8_t* out, size_t& bytes) const noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool get(uint8_t* out, size_t& bytes) const noexcept;
 
     void set(size_t pos, double value) noexcept {
         if (pos < kPositions) {
@@ -56,7 +56,8 @@ class Position {
     }
 
     // Reset encoder at given position to zero
-    [[nodiscard]] std::expected<void, PositionError> reset_encoder(size_t pos) noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool reset_encoder(size_t pos) noexcept;
     
     // Test mode control
     void enable_test_mode(bool enable) noexcept;

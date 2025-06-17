@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <expected>
 
 #include "tusb.h"
 
@@ -29,9 +28,11 @@ class USBDevice {
 
     static USBDevice& instance() noexcept;
 
-    [[nodiscard]] std::expected<void, USBError> init() noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool init() noexcept;
     void task() noexcept;
-    [[nodiscard]] std::expected<void, USBError> send_position_data() noexcept;
+    // Returns true on success, false on error
+    [[nodiscard]] bool send_position_data() noexcept;
 
  private:
     USBDevice() = default;

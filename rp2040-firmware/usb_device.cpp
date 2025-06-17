@@ -47,14 +47,14 @@ USBDevice& USBDevice::instance() {
     return device;
 }
 
-std::expected<void, USBDevice::USBError> USBDevice::init() noexcept {
+bool USBDevice::init() noexcept {
     if (initialized)
-        return {};
+        return true;
 
     tusb_init();
     initialized = true;
 
-    return {};
+    return true;
 }
 
 void USBDevice::task() noexcept {
@@ -96,28 +96,28 @@ void USBDevice::task() noexcept {
     }
 }
 
-std::expected<void, USBDevice::USBError> USBDevice::send_position_data() noexcept {
+bool USBDevice::send_position_data() noexcept {
     if (!initialized) {
-        return std::unexpected(USBError::NotInitialized);
+        return false;
     }
 
     if (!tud_ready()) {
-        return std::unexpected(USBError::DeviceNotReady);
+        return false;
     }
 
     std::array<uint8_t, 64> buffer{};
     size_t bytes = 0;
 
-    if (auto result = Position::instance().get(buffer.data(), bytes); !result) {
-        return std::unexpected(USBError::TransmissionFailed);
+    if (!Position::instance().get(buffer.data(), bytes)) {
+        return false;
     }
 
     // Send the position data
     uint32_t written = tud_vendor_n_write(VENDOR_INTERFACE, buffer.data(), bytes);
     if (written != bytes) {
-        return std::unexpected(USBError::TransmissionFailed);
+        return false;
     }
-    return {};
+    return true;
 }
 
 // TinyUSB callbacks

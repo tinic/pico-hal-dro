@@ -17,7 +17,7 @@ Position& Position::instance() {
 
 void Position::init() noexcept {
     // Initialize the quadrature encoder system
-    if (auto result = QuadratureEncoder::instance().init(); !result) {
+    if (!QuadratureEncoder::instance().init()) {
         // Encoder initialization failed - this is a critical error
         // Set initialized to false to indicate system is not ready
         initialized = false;
@@ -26,9 +26,9 @@ void Position::init() noexcept {
     initialized = true;
 }
 
-std::expected<void, Position::PositionError> Position::get(uint8_t* out, size_t& bytes) const noexcept {
+bool Position::get(uint8_t* out, size_t& bytes) const noexcept {
     if (!initialized) {
-        return std::unexpected(PositionError::NotInitialized);
+        return false;
     }
     
     // Update positions from encoders or test mode before returning
@@ -43,13 +43,12 @@ std::expected<void, Position::PositionError> Position::get(uint8_t* out, size_t&
         memcpy(out, reinterpret_cast<const uint8_t*>(positions.data()), sizeof(positions));
     }
 
-    return {};
+    return true;
 }
 
 void Position::update_from_encoders() noexcept {
-    if (auto result = QuadratureEncoder::instance().get_all_counts(); result) {
-        const auto& counts = *result;
-
+    std::array<int64_t, kPositions> counts;
+    if (QuadratureEncoder::instance().get_all_counts(counts)) {
         // Convert encoder counts to position values using scale factors
         for (size_t i = 0; i < kPositions; i++) {
             positions[i] = static_cast<double>(counts[i]) * scale_factors[i];
@@ -59,21 +58,21 @@ void Position::update_from_encoders() noexcept {
     // graceful degradation rather than complete failure
 }
 
-std::expected<void, Position::PositionError> Position::reset_encoder(size_t pos) noexcept {
+bool Position::reset_encoder(size_t pos) noexcept {
     if (!initialized) {
-        return std::unexpected(PositionError::NotInitialized);
+        return false;
     }
     if (pos >= kPositions) {
-        return std::unexpected(PositionError::InvalidIndex);
+        return false;
     }
 
     // Reset the encoder count and position value
-    if (auto result = QuadratureEncoder::instance().reset_count(pos); !result) {
-        return std::unexpected(PositionError::EncoderError);
+    if (!QuadratureEncoder::instance().reset_count(pos)) {
+        return false;
     }
 
     positions[pos] = 0.0;
-    return {};
+    return true;
 }
 
 void Position::enable_test_mode(bool enable) noexcept {

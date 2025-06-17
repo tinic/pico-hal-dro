@@ -6,6 +6,7 @@ pin out float position-#[4] "Position values from the RP2040 device";
 pin out bit connected "True when USB device is connected";
 
 option userspace yes;
+option extra_link_args "-lusb-1.0";
 
 ;;
 

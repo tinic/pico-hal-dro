@@ -6,7 +6,6 @@ pin out float position-#[4] "Position values from the RP2040 device";
 pin out bit connected "True when USB device is connected";
 
 option userspace yes;
-option extra_setup yes;
 
 ;;
 
@@ -16,6 +15,7 @@ option extra_setup yes;
 #include <libusb-1.0/libusb.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 
 #define VENDOR_ID 0x2E8A
 #define PRODUCT_ID 0x10DF
@@ -26,8 +26,9 @@ option extra_setup yes;
 
 static libusb_device_handle *dev_handle = NULL;
 static libusb_context *ctx = NULL;
+static int should_exit = 0;
 
-int extra_setup(void) {
+static int init_usb(void) {
     int r;
     
     // Initialize libusb
@@ -44,8 +45,21 @@ void user_mainloop(void) {
     uint8_t buffer[64];
     int actual_length;
     int r;
+    static int usb_initialized = 0;
     
-    while (1) {
+    // Initialize USB on first call
+    if (!usb_initialized) {
+        if (init_usb() < 0) {
+            return;
+        }
+        usb_initialized = 1;
+        
+        // Set up signal handlers for cleanup
+        signal(SIGINT, signal_handler);
+        signal(SIGTERM, signal_handler);
+    }
+    
+    while (!should_exit) {
         FOR_ALL_INSTS() {
             // Try to open device if not connected
             if (!dev_handle) {
@@ -101,9 +115,12 @@ void user_mainloop(void) {
         
         usleep(10); // 10μs sleep
     }
+    
+    // Clean up on exit
+    cleanup_usb();
 }
 
-void rtapi_app_exit(void) {
+static void cleanup_usb(void) {
     if (dev_handle) {
         libusb_release_interface(dev_handle, 0);
         libusb_close(dev_handle);
@@ -112,4 +129,8 @@ void rtapi_app_exit(void) {
     if (ctx) {
         libusb_exit(ctx);
     }
+}
+
+static void signal_handler(int sig) {
+    should_exit = 1;
 }

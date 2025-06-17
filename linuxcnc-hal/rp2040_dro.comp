@@ -28,6 +28,21 @@ static libusb_device_handle *dev_handle = NULL;
 static libusb_context *ctx = NULL;
 static int should_exit = 0;
 
+static void signal_handler(int sig) {
+    should_exit = 1;
+}
+
+static void cleanup_usb(void) {
+    if (dev_handle) {
+        libusb_release_interface(dev_handle, 0);
+        libusb_close(dev_handle);
+    }
+    
+    if (ctx) {
+        libusb_exit(ctx);
+    }
+}
+
 static int init_usb(void) {
     int r;
     
@@ -118,19 +133,4 @@ void user_mainloop(void) {
     
     // Clean up on exit
     cleanup_usb();
-}
-
-static void cleanup_usb(void) {
-    if (dev_handle) {
-        libusb_release_interface(dev_handle, 0);
-        libusb_close(dev_handle);
-    }
-    
-    if (ctx) {
-        libusb_exit(ctx);
-    }
-}
-
-static void signal_handler(int sig) {
-    should_exit = 1;
 }

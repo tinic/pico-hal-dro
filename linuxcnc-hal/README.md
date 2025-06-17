@@ -17,7 +17,7 @@ This directory contains the LinuxCNC HAL component for interfacing with the RP20
 
 2. Add udev rule for USB access (create `/etc/udev/rules.d/99-rp2040-encoder.rules`):
    ```
-   SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="10df", MODE="0666"
+   SUBSYSTEM=="usb", ATTRS{idVendor}=="2e8a", ATTRS{idProduct}=="c0de", MODE="0666"
    ```
 
 3. Reload udev rules:
@@ -56,8 +56,11 @@ net encoder-connected rp2040_encoder.0.connected => pyvcp.encoder-connected-led
 
 1. Check USB connection:
    ```bash
-   lsusb | grep 2e8a:10df
+   lsusb | grep 2e8a:c0de
    ```
+   
+   The device serial number shows hardware config and firmware info:
+   `{N}ENC-{git_hash}-{build_date}` (e.g., "4ENC-2d49ae7-2025-06-17")
 
 2. Check HAL component is loaded:
    ```bash

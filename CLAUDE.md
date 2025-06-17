@@ -72,9 +72,12 @@ python3 test_usb_device.py
 ```
 
 The test script will:
-1. Find the USB device (VID: 0x2E8A, PID: 0x10DF)
+1. Find the USB device (VID: 0x2E8A, PID: 0xC0DE)
 2. Request a single position reading
 3. Stream position data for 5 seconds
+
+The device identifies itself with a descriptive serial number in the format:
+`{N}ENC-{git_hash}-{build_date}` (e.g., "4ENC-2d49ae7-2025-06-17")
 
 ## Deployment
 

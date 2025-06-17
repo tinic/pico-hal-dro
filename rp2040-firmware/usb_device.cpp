@@ -8,6 +8,7 @@
 #include "position.h"
 #include "tusb.h"
 #include "ws2812_led.h"
+#include "version.h"
 
 // USB Descriptors
 tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
@@ -39,7 +40,7 @@ char const* string_desc_arr[] = {
     (const char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
     "Raspberry Pi",              // 1: Manufacturer
     "Pico HAL Encoder Interface", // 2: Product
-    "1234567890",                // 3: Serial
+    "4ENC-" GIT_SHORT_SHA "-" GIT_COMMIT_DATE_SHORT, // 3: Serial
 };
 
 USBDevice& USBDevice::instance() {

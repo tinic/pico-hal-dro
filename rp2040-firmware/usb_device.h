@@ -13,7 +13,7 @@ class USBDevice {
     static constexpr uint8_t EP_VENDOR_OUT = 0x01;
 
     static constexpr uint16_t VENDOR_ID = 0x2E8A;   // Raspberry Pi vendor ID
-    static constexpr uint16_t PRODUCT_ID = 0x10DF;  // Custom product ID
+    static constexpr uint16_t PRODUCT_ID = 0xC0DE;  // Custom product ID
 
     static constexpr uint8_t VENDOR_REQUEST_GET_POSITION = 0x01;
     static constexpr uint8_t VENDOR_REQUEST_ENABLE_TEST_MODE = 0x02;

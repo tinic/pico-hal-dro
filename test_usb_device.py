@@ -12,7 +12,7 @@ import sys
 
 # USB device identifiers
 VENDOR_ID = 0x2E8A  # Raspberry Pi Foundation (RP2040)
-PRODUCT_ID = 0x10DF  # Our custom product ID
+PRODUCT_ID = 0xC0DE  # Our custom product ID
 
 # Request codes
 VENDOR_REQUEST_GET_POSITION = 0x01
@@ -251,7 +251,14 @@ def main():
         # Find and setup device
         print("Looking for RP2040 HAL DRO device...")
         dev = find_device()
-        print(f"Found device: {dev}")
+        # Get device serial number
+        try:
+            serial = usb.util.get_string(dev, dev.iSerialNumber)
+            print(f"Found device: {dev}")
+            print(f"Serial: {serial}")
+        except:
+            print(f"Found device: {dev}")
+            print("Serial: Unable to read")
         
         intf = setup_device(dev)
         print(f"Device configured, interface: {intf.bInterfaceNumber}")

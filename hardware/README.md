@@ -17,7 +17,7 @@ The system reads up to 4 quadrature encoders and provides position data over USB
 - **Jienk DB9 Male to Female Terminal Breakout Board** - For signal interception
 
 ### Connection Method
-This setup intercepts the signals between existing glass scales and the TOAUTO DRO unit. The DB9 breakout board allows you to tap into the encoder signals without cutting cables, maintaining the original DRO functionality while adding LinuxCNC capability.
+This setup intercepts the signals between existing glass scales and the TOAUTO DRO unit. The DB9 breakout boards allow you to tap into the encoder signals without cutting cables, maintaining the original DRO functionality while adding LinuxCNC capability. The TXS0108E level shifter enables signal passthrough to the DRO while providing safe 3.3V levels for the RP2040.
 
 ## Pin Assignments
 
@@ -84,9 +84,10 @@ Pin 13 (GND)    ─────────── GND   GND ──────�
 **Note**: The A-side of the TXS0108E is directly soldered to pins 1-9 of the Waveshare RP2040 Zero.
 
 ### Level Shifter Notes
-- OE (Output Enable) pin controls whether the level shifter is active
-- During startup, OE is held low to prevent glitches
-- After initialization, OE can be set high to enable level shifting
+- OE (Output Enable) pin is set HIGH to enable bidirectional level shifting
+- This allows glass scale signals to pass through to the TOAUTO DRO while providing 3.3V levels to the RP2040
+- The RP2040 GPIO pins are configured as inputs only, preventing any interference with the encoder signals
+- The TXS0108E provides proper signal isolation and level conversion between 5V and 3.3V systems
 
 ## Encoder Specifications
 
@@ -150,7 +151,7 @@ From each DB9 breakout board terminal block:
 - Connect power supplies (3.3V to VCCA, 5V to VCCB)
 - Connect grounds together
 - Wire GPIO pins 0-7 to A1-A8 on TXS0108E
-- Connect GPIO 8 to OE pin
+- Connect GPIO 8 to OE pin (will be set HIGH to enable level shifting)
 
 ### 3. Connect Encoders
 - Wire encoder A/B signals to B1-B8 on TXS0108E
@@ -166,9 +167,10 @@ From each DB9 breakout board terminal block:
 
 ### No Encoder Readings
 - Check power supply connections (3.3V and 5V)
-- Verify level shifter OE pin is high during operation
+- Verify level shifter OE pin is HIGH (enabled) during operation
 - Test encoder signals with oscilloscope or multimeter
 - Check GPIO pin assignments match firmware
+- Ensure DB9 breakout boards are properly connected between glass scales and DRO
 
 ### Incorrect Count Direction
 - Swap A and B signals for the affected encoder
@@ -184,6 +186,11 @@ From each DB9 breakout board terminal block:
 - Check USB cable and connections
 - Verify device appears with VID:PID 2e8a:c0de
 - Try different USB port or cable
+
+### DRO Not Working
+- Verify TXS0108E OE pin is HIGH to allow signal passthrough
+- Check all DB9 connections are secure
+- Test that glass scale signals reach the TOAUTO DRO (pins 3,4 on each DB9)
 
 ## Configuration
 

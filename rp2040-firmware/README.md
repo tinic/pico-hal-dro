@@ -19,6 +19,10 @@ This directory contains the firmware for the RP2040-based USB quadrature encoder
 - Encoder 2 (Z-axis): GPIO 4 (A), GPIO 5 (B)
 - Encoder 3 (A-axis): GPIO 6 (A), GPIO 7 (B)
 
+### Level Shifter Control
+- GPIO 8: TXS0108E Output Enable (OE) - Set HIGH to enable level shifting
+- The firmware enables the TXS0108E to allow signal passthrough to the DRO while providing safe 3.3V levels to the RP2040
+
 ### Encoder Scaling
 Scale factors are configured in `main.cpp`:
 - Linear axes (X,Y,Z): Default 0.001 mm/count (1000 counts/mm)
@@ -26,7 +30,8 @@ Scale factors are configured in `main.cpp`:
 
 ## Requirements
 
-- RP2040-based board (Raspberry Pi Pico, Pico W, etc.)
+- Waveshare RP2040 Zero (or compatible RP2040-based board)
+- TXS0108E 8-channel bidirectional level shifter
 - CMake 3.13 or later
 - GCC ARM cross-compiler
 - Pico SDK (included as submodule)

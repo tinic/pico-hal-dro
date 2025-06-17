@@ -54,6 +54,13 @@ class Position {
             scale_factors[pos] = scale;
         }
     }
+    
+    double get_scale(size_t pos) const noexcept {
+        if (pos < kPositions) {
+            return scale_factors[pos];
+        }
+        return 1.0;
+    }
 
     // Reset encoder at given position to zero
     // Returns true on success, false on error

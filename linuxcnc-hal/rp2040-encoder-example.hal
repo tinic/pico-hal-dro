@@ -10,6 +10,7 @@ newsig y-encoder-pos float
 newsig z-encoder-pos float
 newsig a-encoder-pos float
 newsig encoder-connected bit
+newsig encoder-test-mode s32
 
 # Connect RP2040 encoder outputs to signals
 net x-encoder-pos <= rp2040_encoder.0.position-0
@@ -17,6 +18,28 @@ net y-encoder-pos <= rp2040_encoder.0.position-1
 net z-encoder-pos <= rp2040_encoder.0.position-2
 net a-encoder-pos <= rp2040_encoder.0.position-3
 net encoder-connected <= rp2040_encoder.0.connected
+
+# Test mode control (0=off, 1=sine, 2=circular, 3=linear, 4=random)
+# Example: Set test mode to 0 (disabled) for normal operation
+setp rp2040_encoder.0.test-mode 0
+# Or connect to a signal for dynamic control
+# net encoder-test-mode => rp2040_encoder.0.test-mode
+
+# Scale factors - convert encoder counts to meaningful units
+# These are bidirectional (io pins) - they read the device's current scale on startup
+# and can be changed during operation
+# Example: 1000 counts per mm = 0.001 mm/count
+setp rp2040_encoder.0.scale-0 0.001  # X axis: 0.001 mm per count
+setp rp2040_encoder.0.scale-1 0.001  # Y axis: 0.001 mm per count
+setp rp2040_encoder.0.scale-2 0.001  # Z axis: 0.001 mm per count
+setp rp2040_encoder.0.scale-3 0.1    # A axis: 0.1 degrees per count
+
+# Reset pins - rising edge triggers position reset to zero
+# Connect these to UI buttons or other controls
+# net x-zero-button => rp2040_encoder.0.reset-0
+# net y-zero-button => rp2040_encoder.0.reset-1
+# net z-zero-button => rp2040_encoder.0.reset-2
+# net a-zero-button => rp2040_encoder.0.reset-3
 
 # Example: Connect to PyVCP panel for DRO display
 # net x-encoder-pos => pyvcp.x-dro

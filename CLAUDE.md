@@ -101,11 +101,15 @@ sudo halcompile --install rp2040_encoder.comp
 The device implements a vendor-specific USB interface with the following commands:
 
 - **0x01** - Get Position: Returns 32 bytes (4 doubles) with current position values
-- **0x02** - Start Stream: Begins continuous streaming of position data at 100Hz
-- **0x03** - Stop Stream: Stops the continuous stream
-- **0x04** - Enable Test Mode: Enables test mode for simulated position data
-- **0x05** - Disable Test Mode: Disables test mode and returns to encoder data
-- **0x06** - Set Test Pattern: Sets the test pattern (requires 1 byte parameter)
+- **0x02** - Set Test Mode: Sets test mode (requires 1 byte parameter)
+  - 0 = Disable test mode (use real encoder data)
+  - 1 = Sine wave pattern
+  - 2 = Circular motion pattern
+  - 3 = Linear ramp pattern
+  - 4 = Random walk pattern
+- **0x03** - Set Scale: Sets scale factor for an encoder (requires 1 byte encoder index + 8 bytes double scale factor)
+- **0x04** - Get Scale: Returns 32 bytes (4 doubles) with scale factors for all encoders
+- **0x05** - Reset Encoder: Resets encoder position to zero (requires 1 byte encoder index)
 
 Position data format: 4 double-precision floating point values (little-endian)
 
@@ -130,7 +134,7 @@ pos.enable_test_mode(true);
 pos.set_test_pattern(0);  // 0=SINE_WAVE, 1=CIRCULAR, 2=LINEAR_RAMP, 3=RANDOM_WALK
 ```
 
-Or via USB commands in the test script:
+Or via USB commands in the test script or HAL component:
 ```bash
 python3 test_usb_device.py  # Now includes test mode demonstration
 ```

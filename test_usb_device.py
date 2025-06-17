@@ -16,9 +16,7 @@ PRODUCT_ID = 0xC0DE  # Our custom product ID
 
 # Request codes
 VENDOR_REQUEST_GET_POSITION = 0x01
-VENDOR_REQUEST_ENABLE_TEST_MODE = 0x02
-VENDOR_REQUEST_DISABLE_TEST_MODE = 0x03
-VENDOR_REQUEST_SET_TEST_PATTERN = 0x04
+VENDOR_REQUEST_SET_TEST_MODE = 0x02
 
 # Test patterns
 TEST_PATTERN_SINE_WAVE = 0
@@ -206,13 +204,9 @@ def test_mode_demo(dev):
     for pattern_id, pattern_name in patterns:
         print(f"\n--- Testing {pattern_name} Pattern ---")
         
-        # Enable test mode
+        # Set test mode and pattern
         try:
-            dev.write(EP_OUT, [VENDOR_REQUEST_ENABLE_TEST_MODE], timeout=1000)
-            time.sleep(0.2)
-            
-            # Set pattern
-            dev.write(EP_OUT, [VENDOR_REQUEST_SET_TEST_PATTERN, pattern_id], timeout=1000)
+            dev.write(EP_OUT, [VENDOR_REQUEST_SET_TEST_MODE, pattern_id + 1], timeout=1000)
             time.sleep(0.2)
             
             # Read several positions to show the pattern
@@ -234,7 +228,7 @@ def test_mode_demo(dev):
     # Disable test mode
     print("\nDisabling test mode...")
     try:
-        dev.write(EP_OUT, [VENDOR_REQUEST_DISABLE_TEST_MODE], timeout=1000)
+        dev.write(EP_OUT, [VENDOR_REQUEST_SET_TEST_MODE, 0], timeout=1000)
         time.sleep(0.2)
         
         # Verify test mode is off (should return to encoder data or zeros)

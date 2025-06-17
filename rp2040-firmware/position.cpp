@@ -4,7 +4,7 @@
 #include "pico/time.h"
 #include <cstring>
 #include <cmath>
-#include <random>
+#include <cstdlib>
 
 Position& Position::instance() {
     static Position position;
@@ -130,16 +130,20 @@ void Position::update_test_mode() noexcept {
         }
         
         case TestPattern::RANDOM_WALK: {
-            static std::random_device rd;
-            static std::mt19937 gen(rd());
-            static std::normal_distribution<double> dis(0.0, 0.01);
             static uint32_t last_update = 0;
+            static uint32_t seed = 0x12345678;
             
             if (now - last_update >= 50) { // Update every 50ms
-                positions[0] += dis(gen);
-                positions[1] += dis(gen);
-                positions[2] += dis(gen) * 0.5;
-                positions[3] += dis(gen) * 5.0;
+                // Simple linear congruential generator
+                auto next_random = [](uint32_t& s) -> double {
+                    s = (s * 1664525u + 1013904223u);
+                    return ((s >> 16) & 0x7FFF) / 32768.0 - 0.5;  // Range -0.5 to 0.5
+                };
+                
+                positions[0] += next_random(seed) * 0.02;
+                positions[1] += next_random(seed) * 0.02;
+                positions[2] += next_random(seed) * 0.01;
+                positions[3] += next_random(seed) * 0.1;
                 last_update = now;
             }
             break;

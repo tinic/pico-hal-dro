@@ -37,7 +37,7 @@ uint8_t const desc_configuration[] = {
 // String descriptors
 char const* string_desc_arr[] = {
     (const char[]){0x09, 0x04},                       // 0: is supported language is English (0x0409)
-    "Raspberry Pi",                                   // 1: Manufacturer
+    "RP2040",                                         // 1: Manufacturer
     "Quadrature Encoder",                             // 2: Product
     "4ENC-" GIT_SHORT_SHA "-" GIT_COMMIT_DATE_SHORT,  // 3: Serial
 };
@@ -78,15 +78,39 @@ void USBDevice::task() noexcept {
                     case VENDOR_REQUEST_GET_POSITION:
                         (void)send_position_data();  // Explicitly ignore result for now
                         break;
-                    case VENDOR_REQUEST_ENABLE_TEST_MODE:
-                        Position::instance().enable_test_mode(true);
-                        break;
-                    case VENDOR_REQUEST_DISABLE_TEST_MODE:
-                        Position::instance().enable_test_mode(false);
-                        break;
-                    case VENDOR_REQUEST_SET_TEST_PATTERN:
+                    case VENDOR_REQUEST_SET_TEST_MODE:
                         if (i + 1 < count) {
-                            Position::instance().set_test_pattern(request_buf[i + 1]);
+                            uint8_t mode = request_buf[i + 1];
+                            if (mode == 0) {
+                                Position::instance().enable_test_mode(false);
+                            } else {
+                                Position::instance().enable_test_mode(true);
+                                Position::instance().set_test_pattern(mode - 1);  // Convert 1-4 to 0-3
+                            }
+                            i++;  // Skip the parameter byte
+                        }
+                        break;
+                    case VENDOR_REQUEST_SET_SCALE:
+                        // Expect: encoder_index (1 byte) + scale (8 bytes double)
+                        if (i + 9 <= count) {
+                            uint8_t encoder_index = request_buf[i + 1];
+                            double scale;
+                            memcpy(&scale, &request_buf[i + 2], sizeof(double));
+                            if (encoder_index < 4) {
+                                Position::instance().set_scale(encoder_index, scale);
+                            }
+                            i += 9;  // Skip the parameter bytes
+                        }
+                        break;
+                    case VENDOR_REQUEST_GET_SCALE:
+                        (void)send_scale_data();
+                        break;
+                    case VENDOR_REQUEST_RESET_ENCODER:
+                        if (i + 1 < count) {
+                            uint8_t encoder_index = request_buf[i + 1];
+                            if (encoder_index < 4) {
+                                Position::instance().reset_encoder(encoder_index);
+                            }
                             i++;  // Skip the parameter byte
                         }
                         break;
@@ -117,6 +141,34 @@ bool USBDevice::send_position_data() noexcept {
     if (written != bytes) {
         return false;
     }
+    return true;
+}
+
+bool USBDevice::send_scale_data() noexcept {
+    if (!initialized) {
+        return false;
+    }
+
+    // Wait until ready
+    if (!tud_vendor_n_mounted(VENDOR_INTERFACE)) {
+        return false;
+    }
+
+    // Prepare scale data buffer (4 doubles = 32 bytes)
+    uint8_t buffer[32];
+    Position& pos = Position::instance();
+    
+    for (size_t i = 0; i < 4; i++) {
+        double scale = pos.get_scale(i);
+        memcpy(&buffer[i * sizeof(double)], &scale, sizeof(double));
+    }
+
+    // Send the data
+    uint32_t result = tud_vendor_n_write(VENDOR_INTERFACE, buffer, sizeof(buffer));
+    if (result != sizeof(buffer)) {
+        return false;
+    }
+
     return true;
 }
 

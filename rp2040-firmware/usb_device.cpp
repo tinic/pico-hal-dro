@@ -7,8 +7,8 @@
 #include "pico/time.h"
 #include "position.h"
 #include "tusb.h"
-#include "ws2812_led.h"
 #include "version.h"
+#include "ws2812_led.h"
 
 // USB Descriptors
 tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
@@ -30,17 +30,16 @@ tusb_desc_device_t const desc_device = {.bLength = sizeof(tusb_desc_device_t),
 uint8_t const desc_configuration[] = {
     // Config: self powered with remote wakeup, max power 100mA
     TUD_CONFIG_DESCRIPTOR(1, 1, 0, TUD_CONFIG_DESC_LEN + TUD_VENDOR_DESC_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
-    
+
     // Interface: vendor specific class
-    TUD_VENDOR_DESCRIPTOR(USBDevice::VENDOR_INTERFACE, 0, USBDevice::EP_VENDOR_OUT, USBDevice::EP_VENDOR_IN, 64)
-};
+    TUD_VENDOR_DESCRIPTOR(USBDevice::VENDOR_INTERFACE, 0, USBDevice::EP_VENDOR_OUT, USBDevice::EP_VENDOR_IN, 64)};
 
 // String descriptors
 char const* string_desc_arr[] = {
-    (const char[]){0x09, 0x04},  // 0: is supported language is English (0x0409)
-    "Raspberry Pi",              // 1: Manufacturer
-    "Pico HAL Encoder Interface", // 2: Product
-    "4ENC-" GIT_SHORT_SHA "-" GIT_COMMIT_DATE_SHORT, // 3: Serial
+    (const char[]){0x09, 0x04},                       // 0: is supported language is English (0x0409)
+    "Raspberry Pi",                                   // 1: Manufacturer
+    "Quadrature Encoder",                             // 2: Product
+    "4ENC-" GIT_SHORT_SHA "-" GIT_COMMIT_DATE_SHORT,  // 3: Serial
 };
 
 USBDevice& USBDevice::instance() {
@@ -88,7 +87,7 @@ void USBDevice::task() noexcept {
                     case VENDOR_REQUEST_SET_TEST_PATTERN:
                         if (i + 1 < count) {
                             Position::instance().set_test_pattern(request_buf[i + 1]);
-                            i++; // Skip the parameter byte
+                            i++;  // Skip the parameter byte
                         }
                         break;
                 }

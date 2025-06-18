@@ -1,15 +1,11 @@
 ;
-; Quadrature Decoder for RP2040
-; Based on adamgreen's QuadratureDecoder implementation
-; https://github.com/adamgreen/QuadratureDecoder
-;
+; Quadrature Decoder - back to working original
+; Based on adamgreen's implementation
 
 .program quadrature_encoder
 
-; Must start at 0 so that the following jump table can be jumped into with a
-; 'mov pc, isr' instruction.
+; Jump table at address 0
 .origin 0
-    ; 16 element jump table based on 4-bit encoder last state and current state.
     jmp delta0      ; 00-00
     jmp minus1      ; 00-01
     jmp plus1       ; 00-10
@@ -27,38 +23,40 @@
     jmp minus1      ; 11-10
     jmp delta0      ; 11-11
 
-; Program actually starts here.
 .wrap_target
 delta0:
 public start:
-    mov isr, null       ; Make sure that the input shift register is cleared when table jumps to delta0.
-    in y, 2             ; Upper 2-bits of address are formed from previous encoder pin readings
-    mov y, pins         ; Lower 2-bits of address are formed from current encoder pin readings. Save in Y as well.
+    mov isr, null
     in y, 2
-    mov pc, isr         ; Jump into jump table which will then jump to delta0, minus1, or plus1 labels.
+    mov y, pins
+    in y, 2
+    mov pc, isr
 minus1:
-    jmp x-- output      ; Decrement x
+    jmp x-- output
     jmp output
 plus1:
-    mov x, ~x           ; Increment x by calculating x=~(~x - 1)
+    mov x, ~x
     jmp x-- next2
 next2:
     mov x, ~x
 output:
-    mov isr, x          ; Push out updated counter.
+    mov isr, x
     push noblock
 .wrap
 
 
 % c-sdk {
 #include "hardware/clocks.h"
+#include "hardware/gpio.h"
 
 static inline void quadrature_encoder_program_init(PIO pio, uint sm, uint offset, uint pin, int max_step_rate)
 {
-    // Configure pins as inputs
+    // Configure pins as inputs with pull-ups
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, false);
     pio_gpio_init(pio, pin);
     pio_gpio_init(pio, pin + 1);
+    gpio_set_pulls(pin, true, true);     // Enable pull-up, disable pull-down
+    gpio_set_pulls(pin + 1, true, true); // Enable pull-up, disable pull-down
 
     pio_sm_config c = quadrature_encoder_program_get_default_config(offset);
     sm_config_set_in_pins(&c, pin);
@@ -90,7 +88,7 @@ static inline void quadrature_encoder_program_init(PIO pio, uint sm, uint offset
     pio_sm_exec(pio, sm, pio_encode_mov(pio_isr, pio_null));
     
     pio_sm_set_enabled(pio, sm, true);
-}
+} 
 
 // This is just a placeholder - actual implementation is in quadrature_encoder.cpp
 // to access the last_positions array

@@ -18,7 +18,6 @@ void WS2812Led::init() {
 }
 
 void WS2812Led::set_color(uint8_t red, uint8_t green, uint8_t blue) {
-    // WS2812 expects GRB format
     uint32_t pixel_grb = ((uint32_t)green << 16) | ((uint32_t)red << 8) | blue;
     put_pixel(pixel_grb);
 }

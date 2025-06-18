@@ -6,7 +6,7 @@
 
 class WS2812Led {
 public:
-    static constexpr uint8_t LED_PIN = 16;  // Waveshare RP2040 Zero WS2812 pin
+    static constexpr uint8_t LED_PIN = 16;
     
     static WS2812Led& instance();
     
@@ -23,8 +23,8 @@ private:
     void init();
     void put_pixel(uint32_t pixel_grb);
     
-    PIO pio = pio1;  // Use pio1 to avoid conflict with quadrature encoder
+    PIO pio = pio1;
     uint sm = 0;
 };
 
-#endif // WS2812_LED_H_
+#endif

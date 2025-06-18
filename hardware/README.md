@@ -67,21 +67,21 @@ The TXS0108E is used to interface between the RP2040 (3.3V) and encoder signals 
 ```
 Waveshare RP2040 Zero       TXS0108E          Terminal Block (10-pin)
 ─────────────────────       ────────          ──────────────────────
-Pin 1  (GPIO 0) ─────────── A1    B1 ─────────── Pin 1 (Encoder 0 A)
-Pin 2  (GPIO 1) ─────────── A2    B2 ─────────── Pin 2 (Encoder 0 B)
-Pin 3  (GPIO 2) ─────────── A3    B3 ─────────── Pin 3 (Encoder 1 A)
-Pin 4  (GPIO 3) ─────────── A4    B4 ─────────── Pin 4 (Encoder 1 B)
-Pin 5  (GPIO 4) ─────────── A5    B5 ─────────── Pin 5 (Encoder 2 A)
-Pin 6  (GPIO 5) ─────────── A6    B6 ─────────── Pin 6 (Encoder 2 B)
-Pin 7  (GPIO 6) ─────────── A7    B7 ─────────── Pin 7 (Encoder 3 A)
-Pin 8  (GPIO 7) ─────────── A8    B8 ─────────── Pin 8 (Encoder 3 B)
-Pin 9  (GPIO 8) ─────────── OE              
-Pin 10 (3V3)    ─────────── VCCA             
-Pin 13 (GND)    ─────────── GND   GND ─────────── Pin 9  (Common GND)
+Pin 0  (GPIO 0) ─────────── A1    B1 ─────────── Pin 1 (Encoder 0 A)
+Pin 1  (GPIO 1) ─────────── A2    B2 ─────────── Pin 2 (Encoder 0 B)
+Pin 2  (GPIO 2) ─────────── A3    B3 ─────────── Pin 3 (Encoder 1 A)
+Pin 3  (GPIO 3) ─────────── A4    B4 ─────────── Pin 4 (Encoder 1 B)
+Pin 4  (GPIO 4) ─────────── A5    B5 ─────────── Pin 5 (Encoder 2 A)
+Pin 5  (GPIO 5) ─────────── A6    B6 ─────────── Pin 6 (Encoder 2 B)
+Pin 6  (GPIO 6) ─────────── A7    B7 ─────────── Pin 7 (Encoder 3 A)
+Pin 7  (GPIO 7) ─────────── A8    B8 ─────────── Pin 8 (Encoder 3 B)
+Pin 8  (GPIO 8) ─────────── OE              
+Pin 30 (3V3)    ─────────── VCCA             
+Pin 31 (GND)    ─────────── GND   GND ─────────── Pin 9  (Common GND)
                             VCCB ─────────── Pin 10 (+5V Supply)
 ```
 
-**Note**: The A-side of the TXS0108E is directly soldered to pins 1-9 of the Waveshare RP2040 Zero.
+**Note**: The A-side of the TXS0108E is directly soldered to pins 0-8, 30, and 31 of the Waveshare RP2040 Zero.
 
 ### Level Shifter Notes
 - OE (Output Enable) pin is set HIGH to enable bidirectional level shifting

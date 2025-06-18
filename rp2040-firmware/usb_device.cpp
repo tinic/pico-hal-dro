@@ -4,6 +4,7 @@
 #include <cstring>
 
 #include "hardware/gpio.h"
+#include "hardware/irq.h"
 #include "pico/time.h"
 #include "position.h"
 #include "tusb.h"
@@ -47,6 +48,9 @@ USBDevice& USBDevice::instance() {
 
 void USBDevice::init() {
     tusb_init();
+    
+    // Set USB interrupt to lower priority than encoder interrupts
+    irq_set_priority(USBCTRL_IRQ, 255);  // Lowest priority
 }
 
 void USBDevice::task() {

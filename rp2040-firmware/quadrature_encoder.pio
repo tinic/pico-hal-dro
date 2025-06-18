@@ -1,6 +1,4 @@
 ;
-; Quadrature Decoder - back to working original
-; Based on adamgreen's implementation
 
 .program quadrature_encoder
 
@@ -55,8 +53,8 @@ static inline void quadrature_encoder_program_init(PIO pio, uint sm, uint offset
     pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, false);
     pio_gpio_init(pio, pin);
     pio_gpio_init(pio, pin + 1);
-    gpio_set_pulls(pin, true, true);     // Enable pull-up, disable pull-down
-    gpio_set_pulls(pin + 1, true, true); // Enable pull-up, disable pull-down
+    gpio_set_pulls(pin, false, false);     // Enable pull-up, disable pull-down
+    gpio_set_pulls(pin + 1, false, false); // Enable pull-up, disable pull-down
 
     pio_sm_config c = quadrature_encoder_program_get_default_config(offset);
     sm_config_set_in_pins(&c, pin);

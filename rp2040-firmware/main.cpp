@@ -21,6 +21,12 @@ int main() {
     gpio_set_dir(8, GPIO_OUT);
     gpio_put(8, 1);  // OE high = enabled, allows signal passthrough to DRO
 
+    for (uint pin = 0; pin < 8; pin++) {
+        gpio_init(pin);
+        gpio_set_dir(pin, GPIO_IN);
+        gpio_set_pulls(pin, false, false);
+    }
+
     // Initialize the USB device
     if (!USBDevice::instance().init()) {
         // USB init failed - show red LED

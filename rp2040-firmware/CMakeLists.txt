@@ -89,12 +89,12 @@ add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
 
 add_custom_target(flash
     DEPENDS ${CMAKE_PROJECT_NAME}
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_PROJECT_NAME}.uf2 /Volumes/RPI-RP2/${CMAKE_PROJECT_NAME}.uf2
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_PROJECT_NAME}.uf2 /media/turo/RPI-RP2/${CMAKE_PROJECT_NAME}.uf2
     USES_TERMINAL
 )
 
 add_custom_target(flash-quick
     DEPENDS ${CMAKE_PROJECT_NAME}
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_PROJECT_NAME}.uf2 /Volumes/RPI-RP2/
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_PROJECT_NAME}.uf2 /media/turo/RPI-RP2/
     USES_TERMINAL
 )

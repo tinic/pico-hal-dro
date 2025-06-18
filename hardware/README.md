@@ -78,7 +78,7 @@ Pin 7  (GPIO 7) ─────────── A8    B8 ───────
 Pin 8  (GPIO 8) ─────────── OE              
 Pin 30 (3V3)    ─────────── VCCA             
 Pin 31 (GND)    ─────────── GND   GND ─────────── Pin 9  (Common GND)
-                            VCCB ─────────── Pin 10 (+5V Supply)
+                                  VCCB ────────── Pin 10 (+5V Supply)
 ```
 
 **Note**: The A-side of the TXS0108E is directly soldered to pins 0-8, 30, and 31 of the Waveshare RP2040 Zero.

@@ -4,7 +4,7 @@ This document describes the hardware setup for the RP2040-based USB quadrature e
 
 ## Overview
 
-The system reads up to 4 quadrature encoders and provides position data over USB to LinuxCNC. It uses PIO state machines for high-speed, accurate encoder counting with 64-bit signed position counters.
+The system reads up to 4 quadrature encoders and provides position data over USB to LinuxCNC. It uses PIO state machines for high-speed, accurate encoder counting with 32-bit signed position counters.
 
 ## Required Components
 

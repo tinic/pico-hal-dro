@@ -35,7 +35,6 @@ make
 - Position tracking is handled through dedicated position modules
 - Quadrature encoders are read using PIO state machines for high-speed, accurate counting
 - 32-bit signed counters for position tracking
-- Modern C++23 features including std::expected for error handling, constexpr, and noexcept
 - Simple, clear interfaces focused on the specific use case
 
 ## Hardware Configuration

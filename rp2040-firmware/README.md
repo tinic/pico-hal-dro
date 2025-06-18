@@ -5,11 +5,10 @@ This directory contains the firmware for the RP2040-based USB quadrature encoder
 ## Features
 
 - Supports 4 quadrature encoders on GPIO pins 0-7
-- 64-bit signed position counters with automatic overflow handling
+- 32-bit signed position counters
 - High-speed PIO state machines for accurate encoder counting
-- USB interface with 100Hz streaming capability
+- USB interface with 1ms streaming capability
 - Test mode with multiple simulation patterns
-- Modern C++23 implementation with error handling
 
 ## Hardware Configuration
 
@@ -78,7 +77,7 @@ picotool reboot
 The device implements a vendor-specific USB interface (VID: 0x2E8A, PID: 0xC0DE) with the following commands:
 
 - **0x01** - Get Position: Returns 32 bytes (4 doubles) with current position values
-- **0x02** - Start Stream: Begins continuous streaming at 100Hz
+- **0x02** - Start Stream: Begins continuous streaming at 1ms intervals
 - **0x03** - Stop Stream: Stops the continuous stream
 - **0x04** - Enable Test Mode: Enables test mode for simulated data
 - **0x05** - Disable Test Mode: Returns to encoder data

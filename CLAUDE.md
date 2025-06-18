@@ -34,8 +34,7 @@ make
 - Firmware implements USB device functionality for LinuxCNC communication
 - Position tracking is handled through dedicated position modules
 - Quadrature encoders are read using PIO state machines for high-speed, accurate counting
-- 64-bit signed counters with automatic overflow detection and handling
-- Overflow detection based on large magnitude changes with sign flip detection
+- 32-bit signed counters for position tracking
 - Modern C++23 features including std::expected for error handling, constexpr, and noexcept
 - Simple, clear interfaces focused on the specific use case
 
@@ -53,12 +52,10 @@ Scale factors convert encoder counts to meaningful units. Configure in main.cpp:
 - Linear axes (X,Y,Z): Default 0.001 mm/count (1000 counts/mm)
 - Rotary axis (A): Default 0.1 degrees/count (10 counts/degree)
 
-### Overflow Handling
+### Position Counters
 - PIO hardware counters are 32-bit signed integers
-- Software maintains 64-bit signed counters for extended range
-- Automatic overflow detection every 1ms using sign-flip detection
-- Handles both positive and negative overflows seamlessly
-- No count loss during overflow events
+- Direct reading from PIO state machines without software extension
+- Range: ±2,147,483,647 counts
 
 ## Testing
 

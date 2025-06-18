@@ -44,20 +44,18 @@ char const* string_desc_arr[] = {
 
 USBDevice& USBDevice::instance() {
     static USBDevice device;
+    if (!device.initialized) {
+        device.init();
+        device.initialized = true;
+    }
     return device;
 }
 
-bool USBDevice::init() noexcept {
-    if (initialized)
-        return true;
-
+void USBDevice::init() {
     tusb_init();
-    initialized = true;
-
-    return true;
 }
 
-void USBDevice::task() noexcept {
+void USBDevice::task() {
     tud_task();
 
     // Check if we received a request
@@ -67,9 +65,9 @@ void USBDevice::task() noexcept {
         if (count > 0) {
             static bool flip = false;
             if (flip) {
-                WS2812Led::set_color(64, 64, 0);  // Yellow
+                WS2812Led::instance().set_color(64, 64, 0);  // Yellow
             } else {
-                WS2812Led::set_off();
+                WS2812Led::instance().set_off();
             }
             flip ^= 1;
             // Process each byte as a potential command
@@ -120,7 +118,7 @@ void USBDevice::task() noexcept {
     }
 }
 
-bool USBDevice::send_position_data() noexcept {
+bool USBDevice::send_position_data() {
     if (!initialized) {
         return false;
     }
@@ -145,7 +143,7 @@ bool USBDevice::send_position_data() noexcept {
     return true;
 }
 
-bool USBDevice::send_scale_data() noexcept {
+bool USBDevice::send_scale_data() {
     if (!initialized) {
         return false;
     }

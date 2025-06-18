@@ -16,18 +16,13 @@ Position& Position::instance() {
     return position;
 }
 
-void Position::init() noexcept {
-    // Initialize the quadrature encoder system
-    if (!QuadratureEncoder::instance().init()) {
-        // Encoder initialization failed - this is a critical error
-        // Set initialized to false to indicate system is not ready
-        initialized = false;
-        return;
-    }
+void Position::init() {
+    // Just access the quadrature encoder instance - it will auto-initialize
+    QuadratureEncoder::instance();
     initialized = true;
 }
 
-bool Position::get(uint8_t* out, size_t& bytes) const noexcept {
+bool Position::get(uint8_t* out, size_t& bytes) const {
     if (!initialized) {
         return false;
     }
@@ -53,7 +48,7 @@ bool Position::get(uint8_t* out, size_t& bytes) const noexcept {
     return true;
 }
 
-void Position::update_from_encoders() noexcept {
+void Position::update_from_encoders() {
     std::array<int64_t, kPositions> counts;
     if (QuadratureEncoder::instance().get_all_counts(counts)) {
         // Convert encoder counts to position values using scale factors
@@ -65,7 +60,7 @@ void Position::update_from_encoders() noexcept {
     // graceful degradation rather than complete failure
 }
 
-bool Position::reset_encoder(size_t pos) noexcept {
+bool Position::reset_encoder(size_t pos) {
     if (!initialized) {
         return false;
     }
@@ -82,7 +77,7 @@ bool Position::reset_encoder(size_t pos) noexcept {
     return true;
 }
 
-void Position::enable_test_mode(bool enable) noexcept {
+void Position::enable_test_mode(bool enable) {
     if (enable && !test_mode) {
         test_mode = true;
         test_mode_start_time = to_ms_since_boot(get_absolute_time());
@@ -92,7 +87,7 @@ void Position::enable_test_mode(bool enable) noexcept {
     }
 }
 
-void Position::set_test_pattern(uint8_t pattern) noexcept {
+void Position::set_test_pattern(uint8_t pattern) {
     if (pattern < 4) {
         test_pattern = static_cast<TestPattern>(pattern);
         if (test_mode) {
@@ -102,7 +97,7 @@ void Position::set_test_pattern(uint8_t pattern) noexcept {
     }
 }
 
-void Position::update_test_mode() noexcept {
+void Position::update_test_mode() {
     if (!test_mode) return;
     
     uint32_t now = to_ms_since_boot(get_absolute_time());

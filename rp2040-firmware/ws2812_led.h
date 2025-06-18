@@ -2,20 +2,29 @@
 #define WS2812_LED_H_
 
 #include <cstdint>
+#include "hardware/pio.h"
 
 class WS2812Led {
 public:
     static constexpr uint8_t LED_PIN = 16;  // Waveshare RP2040 Zero WS2812 pin
     
-    static void init();
-    static void set_color(uint8_t red, uint8_t green, uint8_t blue);
-    static void set_red();
-    static void set_green();
-    static void set_blue();
-    static void set_off();
+    static WS2812Led& instance();
+    
+    void set_color(uint8_t red, uint8_t green, uint8_t blue);
+    void set_red();
+    void set_green();
+    void set_blue();
+    void set_off();
     
 private:
-    static void put_pixel(uint32_t pixel_grb);
+    WS2812Led() = default;
+    bool initialized = false;
+    
+    void init();
+    void put_pixel(uint32_t pixel_grb);
+    
+    PIO pio = pio1;  // Use pio1 to avoid conflict with quadrature encoder
+    uint sm = 0;
 };
 
 #endif // WS2812_LED_H_

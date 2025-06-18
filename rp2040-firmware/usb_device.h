@@ -31,14 +31,13 @@ class USBDevice {
         DeviceNotReady
     };
 
-    static USBDevice& instance() noexcept;
+    static USBDevice& instance();
 
+    void init();
+    void task();
     // Returns true on success, false on error
-    [[nodiscard]] bool init() noexcept;
-    void task() noexcept;
-    // Returns true on success, false on error
-    [[nodiscard]] bool send_position_data() noexcept;
-    [[nodiscard]] bool send_scale_data() noexcept;
+    [[nodiscard]] bool send_position_data();
+    [[nodiscard]] bool send_scale_data();
 
  private:
     USBDevice() = default;

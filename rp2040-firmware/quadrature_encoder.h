@@ -29,28 +29,27 @@ class QuadratureEncoder {
     static QuadratureEncoder& instance();
 
     // Initialize all encoders
-    // Returns true on success, false on error
-    [[nodiscard]] bool init() noexcept;
+    void init();
 
     // Get current count for a specific encoder (64-bit)
     // Returns true on success, false on error. Count is returned via output parameter
-    [[nodiscard]] bool get_count(size_t encoder_idx, int64_t& count) const noexcept;
+    [[nodiscard]] bool get_count(size_t encoder_idx, int64_t& count) const;
 
     // Get counts for all encoders at once (more efficient)
     // Returns true on success, false on error. Counts are returned via output parameter
-    [[nodiscard]] bool get_all_counts(std::array<int64_t, kNumEncoders>& counts) const noexcept;
+    [[nodiscard]] bool get_all_counts(std::array<int64_t, kNumEncoders>& counts) const;
 
     // Reset count for a specific encoder
     // Returns true on success, false on error
-    [[nodiscard]] bool reset_count(size_t encoder_idx) noexcept;
+    [[nodiscard]] bool reset_count(size_t encoder_idx);
 
     // Set the maximum expected step rate (0 = no limit)
-    constexpr void set_max_step_rate(int max_rate) noexcept {
+    constexpr void set_max_step_rate(int max_rate) {
         max_step_rate = max_rate;
     }
 
-    // Periodic update to check for overflows - should be called regularly
-    void update_overflow_check() noexcept;
+    // Periodic update to drain PIO FIFOs - should be called regularly
+    void update_fifo_drain();
 
  private:
     QuadratureEncoder() = default;
@@ -59,26 +58,23 @@ class QuadratureEncoder {
     PIO pio = pio0;
     std::array<uint, kNumEncoders> sm_nums = {};
 
-    // 64-bit counters and overflow handling
-    std::array<int64_t, kNumEncoders> full_counts = {};      // Full 64-bit counts
-    std::array<int32_t, kNumEncoders> last_raw_counts = {};  // Last 32-bit PIO counts
-    std::array<int64_t, kNumEncoders> count_offsets = {};    // Reset offsets
+    // Simple 32-bit count offsets for zeroing
+    std::array<int32_t, kNumEncoders> count_offsets = {};    // Reset offsets
+    
+    // Last known positions to maintain state when FIFO is empty
+    mutable std::array<int32_t, kNumEncoders> last_positions = {};
 
-    // Overflow detection timing
-    uint32_t last_overflow_check = 0;
-    static constexpr uint32_t kOverflowCheckInterval = 1000;  // Check every 1ms
+    // FIFO drain timing
+    uint32_t last_fifo_drain = 0;
+    static constexpr uint32_t kFifoDrainInterval = 1000;  // Drain every 1ms
 
     int max_step_rate = 0;  // Maximum expected steps per second
 
     // Load the PIO program and configure state machines
-    // Returns true on success, false on error
-    [[nodiscard]] bool setup_pio() noexcept;
-
-    // Update a single encoder's overflow status
-    void update_encoder_overflow(size_t encoder_idx, int32_t raw_count) noexcept;
-
-    // Detect if overflow occurred based on sign change
-    [[nodiscard]] static constexpr bool detect_overflow(int32_t old_count, int32_t new_count) noexcept;
+    void setup_pio();
+    
+    // Get raw count from PIO, maintaining last known position
+    [[nodiscard]] int32_t get_raw_count(size_t encoder_idx) const;
 };
 
 #endif  // QUADRATURE_ENCODER_H_

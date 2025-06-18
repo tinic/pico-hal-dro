@@ -12,29 +12,22 @@
 #include "ws2812_led.h"
 
 int main() {
-    // Initialize WS2812 LED (Waveshare RP2040 Zero)
-    WS2812Led::init();
-    WS2812Led::set_blue();  // Show blue on startup
+    // Initialize WS2812 LED (auto-initializes on first access)
+    WS2812Led::instance().set_blue();  // Show blue on startup
 
     // Configure TXS0108E level shifter - set OE pin (GPIO 8) high to enable level shifting
     gpio_init(8);
     gpio_set_dir(8, GPIO_OUT);
     gpio_put(8, 1);  // OE high = enabled, allows signal passthrough to DRO
 
-    for (uint pin = 0; pin < 8; pin++) {
-        gpio_init(pin);
-        gpio_set_dir(pin, GPIO_IN);
-        gpio_set_pulls(pin, false, false);
-    }
+    // Don't initialize GPIO pins 0-7 here - let PIO handle them
+    // The quadrature_encoder_program_init() function will call pio_gpio_init()
+    // which properly configures the pins for PIO use
 
-    // Initialize the USB device
-    if (!USBDevice::instance().init()) {
-        // USB init failed - show red LED
-        WS2812Led::set_red();
-        while(1) tight_loop_contents();
-    }
+    // Access USB device instance (auto-initializes)
+    USBDevice::instance();
 
-    // Initialize position system (which also initializes encoders)
+    // Initialize position system (which also auto-initializes encoders)
     Position& pos = Position::instance();
 
     // Set scale factors for each encoder
@@ -49,11 +42,11 @@ int main() {
     pos.enable_test_mode(false);
 
     // Show green to indicate ready
-    WS2812Led::set_green();
+    WS2812Led::instance().set_green();
 
     while (1) {
         USBDevice::instance().task();
-        // Periodically check for encoder overflows
-        QuadratureEncoder::instance().update_overflow_check();
+        // Periodically drain encoder FIFOs
+        QuadratureEncoder::instance().update_fifo_drain();
     }
 }

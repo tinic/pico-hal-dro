@@ -6,138 +6,94 @@
 
 QuadratureEncoder& QuadratureEncoder::instance() {
     static QuadratureEncoder encoder;
+    if (!encoder.initialized) {
+        encoder.init();
+        encoder.initialized = true;
+    }
     return encoder;
 }
 
-bool QuadratureEncoder::init() noexcept {
-    if (initialized)
-        return true;
+void QuadratureEncoder::init() {
+    setup_pio();
 
-    if (!setup_pio()) {
-        return false;
-    }
+    // Initialize timing for FIFO draining
+    last_fifo_drain = to_ms_since_boot(get_absolute_time());
 
-    // Initialize timing for overflow checks
-    last_overflow_check = to_ms_since_boot(get_absolute_time());
-
-    // Initialize all counts to zero
-    full_counts.fill(0);
-    last_raw_counts.fill(0);
+    // Initialize count offsets to zero
     count_offsets.fill(0);
+    last_positions.fill(0);
 
-    // Get initial PIO counts
+    // Get initial PIO counts and reset them
     for (size_t i = 0; i < kNumEncoders; i++) {
-        last_raw_counts[i] = quadrature_encoder_get_count(pio, sm_nums[i]);
+        // Clear any garbage in the FIFOs first
+        pio_sm_clear_fifos(pio, sm_nums[i]);
+        
+        // Wait a bit for the PIO to start pushing values
+        sleep_us(100);
+        
+        // Get the initial count and use it as our zero reference
+        int32_t initial_count = get_raw_count(i);
+        count_offsets[i] = initial_count;
+        last_positions[i] = initial_count;
     }
-
-    initialized = true;
-    return true;
 }
 
-bool QuadratureEncoder::setup_pio() noexcept {
+void QuadratureEncoder::setup_pio() {
     // Add the program to PIO instruction memory
     uint offset = pio_add_program(pio, &quadrature_encoder_program);
 
     // Initialize each encoder with its own state machine
     for (size_t i = 0; i < kNumEncoders; i++) {
         uint sm = pio_claim_unused_sm(pio, true);
-        if (sm == static_cast<uint>(-1)) {
-            return false;
-        }
         sm_nums[i] = sm;
 
         uint pin_base = kBasePin + (i * kPinsPerEncoder);
         quadrature_encoder_program_init(pio, sm, offset, pin_base, max_step_rate);
     }
-
-    return true;
 }
 
-constexpr bool QuadratureEncoder::detect_overflow(int32_t old_count, int32_t new_count) noexcept {
-    // Detect overflow by checking for large magnitude change and sign flip
-    // This works because we expect small incremental changes, not huge jumps
-    constexpr int32_t threshold = 0x40000000;  // Half of int32 range
-
-    // Check for positive overflow (wrapped to negative)
-    if (old_count > threshold && new_count < -threshold) {
-        return true;  // Positive overflow
+int32_t QuadratureEncoder::get_raw_count(size_t encoder_idx) const {
+    if (encoder_idx >= kNumEncoders) {
+        return 0;
     }
-
-    // Check for negative overflow (wrapped to positive)
-    if (old_count < -threshold && new_count > threshold) {
-        return true;  // Negative overflow
-    }
-
-    return false;
-}
-
-void QuadratureEncoder::update_encoder_overflow(size_t encoder_idx, int32_t raw_count) noexcept {
-    int32_t old_count = last_raw_counts[encoder_idx];
-
-    if (detect_overflow(old_count, raw_count)) {
-        // Handle overflow
-        if (old_count > 0 && raw_count < 0) {
-            // Positive overflow: add 2^32 to maintain continuity
-            full_counts[encoder_idx] += (1LL << 32);
-        } else if (old_count < 0 && raw_count > 0) {
-            // Negative overflow: subtract 2^32 to maintain continuity
-            full_counts[encoder_idx] -= (1LL << 32);
+    
+    // Check if there are new values in the FIFO
+    if (!pio_sm_is_rx_fifo_empty(pio, sm_nums[encoder_idx])) {
+        // Read all available values to get the most recent
+        int32_t count = last_positions[encoder_idx];
+        while (!pio_sm_is_rx_fifo_empty(pio, sm_nums[encoder_idx])) {
+            count = (int32_t)pio->rxf[sm_nums[encoder_idx]];
         }
-    }
-
-    // Update the stored count
-    last_raw_counts[encoder_idx] = raw_count;
-
-    // Calculate the full 64-bit count
-    // We need to handle the signed 32-bit value properly
-    int64_t signed_raw = static_cast<int64_t>(raw_count);
-    full_counts[encoder_idx] = (full_counts[encoder_idx] & 0xFFFFFFFF00000000LL) + signed_raw;
-}
-
-void QuadratureEncoder::update_overflow_check() noexcept {
-    if (!initialized)
-        return;
-
-    uint32_t now = to_ms_since_boot(get_absolute_time());
-    if (now - last_overflow_check < kOverflowCheckInterval) {
-        return;  // Not time for check yet
-    }
-
-    last_overflow_check = now;
-
-    // Request counts from all encoders
-    for (size_t i = 0; i < kNumEncoders; i++) {
-        quadrature_encoder_request_count(pio, sm_nums[i]);
-    }
-
-    // Process overflow for all encoders
-    for (size_t i = 0; i < kNumEncoders; i++) {
-        int32_t raw_count = quadrature_encoder_fetch_count(pio, sm_nums[i]);
-        update_encoder_overflow(i, raw_count);
+        // Update our cached position
+        last_positions[encoder_idx] = count;
+        return count;
+    } else {
+        // No new data, return last known position
+        return last_positions[encoder_idx];
     }
 }
 
-bool QuadratureEncoder::get_all_counts(std::array<int64_t, kNumEncoders>& counts) const noexcept {
+void QuadratureEncoder::update_fifo_drain() {
+    // Temporarily disabled to debug hanging issue
+    return;
+}
+
+bool QuadratureEncoder::get_all_counts(std::array<int64_t, kNumEncoders>& counts) const {
     if (!initialized) {
         return false;
     }
 
-    // Request counts from all encoders
+    // Fetch counts from all encoders
     for (size_t i = 0; i < kNumEncoders; i++) {
-        quadrature_encoder_request_count(pio, sm_nums[i]);
-    }
-
-    // Fetch and process counts from all encoders
-    for (size_t i = 0; i < kNumEncoders; i++) {
-        int32_t raw_count = quadrature_encoder_fetch_count(pio, sm_nums[i]);
-        const_cast<QuadratureEncoder*>(this)->update_encoder_overflow(i, raw_count);
-        counts[i] = full_counts[i] - count_offsets[i];
+        int32_t raw_count = get_raw_count(i);
+        // Simple subtraction without overflow handling for debugging
+        counts[i] = static_cast<int32_t>(raw_count - count_offsets[i]);
     }
 
     return true;
 }
 
-bool QuadratureEncoder::get_count(size_t encoder_idx, int64_t& count) const noexcept {
+bool QuadratureEncoder::get_count(size_t encoder_idx, int64_t& count) const {
     if (!initialized) {
         return false;
     }
@@ -145,16 +101,16 @@ bool QuadratureEncoder::get_count(size_t encoder_idx, int64_t& count) const noex
         return false;
     }
 
-    // Get current raw count and update overflow detection
-    int32_t raw_count = quadrature_encoder_get_count(pio, sm_nums[encoder_idx]);
-    const_cast<QuadratureEncoder*>(this)->update_encoder_overflow(encoder_idx, raw_count);
-
-    // Return the 64-bit count minus offset
-    count = full_counts[encoder_idx] - count_offsets[encoder_idx];
+    // Get current raw count - no overflow handling for debugging
+    int32_t raw_count = get_raw_count(encoder_idx);
+    
+    // Simple subtraction without overflow handling for debugging
+    count = static_cast<int32_t>(raw_count - count_offsets[encoder_idx]);
+    
     return true;
 }
 
-bool QuadratureEncoder::reset_count(size_t encoder_idx) noexcept {
+bool QuadratureEncoder::reset_count(size_t encoder_idx) {
     if (!initialized) {
         return false;
     }
@@ -162,12 +118,11 @@ bool QuadratureEncoder::reset_count(size_t encoder_idx) noexcept {
         return false;
     }
 
-    // Update overflow status first
-    int32_t raw_count = quadrature_encoder_get_count(pio, sm_nums[encoder_idx]);
-    update_encoder_overflow(encoder_idx, raw_count);
-
-    // Set the current full count as the offset
-    count_offsets[encoder_idx] = full_counts[encoder_idx];
+    // Get the current raw count
+    int32_t raw_count = get_raw_count(encoder_idx);
+    
+    // Set this as the new zero reference
+    count_offsets[encoder_idx] = raw_count;
 
     return true;
 }

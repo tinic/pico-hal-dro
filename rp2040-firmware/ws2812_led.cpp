@@ -3,16 +3,18 @@
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
 
-static PIO pio = pio1;  // Use pio1 to avoid conflict with quadrature encoder
-static uint sm = 0;
-static bool initialized = false;
+WS2812Led& WS2812Led::instance() {
+    static WS2812Led led;
+    if (!led.initialized) {
+        led.init();
+        led.initialized = true;
+    }
+    return led;
+}
 
 void WS2812Led::init() {
-    if (initialized) return;
-    
     uint offset = pio_add_program(pio, &ws2812_program);
     ws2812_program_init(pio, sm, offset, LED_PIN, 800000, false);
-    initialized = true;
 }
 
 void WS2812Led::set_color(uint8_t red, uint8_t green, uint8_t blue) {

@@ -5,14 +5,16 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "quadrature_encoder.h"
+
 class Position {
  private:
     bool initialized = false;
-    void init() noexcept;
+    void init();
 
-    static constexpr size_t kPositions = 4;
+    static constexpr size_t kPositions = QuadratureEncoder::kNumEncoders;
     std::array<double, kPositions> positions{};
-    std::array<double, kPositions> scale_factors{1.0, 1.0, 1.0, 1.0};
+    std::array<double, kPositions> scale_factors{};
     
     // Test mode functionality
     bool test_mode = false;
@@ -26,10 +28,10 @@ class Position {
     } test_pattern = TestPattern::SINE_WAVE;
     
     // Update positions from encoder counts
-    void update_from_encoders() noexcept;
+    void update_from_encoders();
     
     // Update positions in test mode
-    void update_test_mode() noexcept;
+    void update_test_mode();
 
  public:
     enum class PositionError {
@@ -38,25 +40,25 @@ class Position {
         EncoderError
     };
 
-    static Position& instance() noexcept;
+    static Position& instance();
 
     // Returns true on success, false on error
     // Data format: [sentinel:4 bytes][positions:32 bytes] = 36 bytes total
-    [[nodiscard]] bool get(uint8_t* out, size_t& bytes) const noexcept;
+    [[nodiscard]] bool get(uint8_t* out, size_t& bytes) const;
 
-    void set(size_t pos, double value) noexcept {
+    void set(size_t pos, double value) {
         if (pos < kPositions) {
             positions[pos] = value;
         }
     }
 
-    void set_scale(size_t pos, double scale) noexcept {
+    void set_scale(size_t pos, double scale) {
         if (pos < kPositions) {
             scale_factors[pos] = scale;
         }
     }
     
-    double get_scale(size_t pos) const noexcept {
+    double get_scale(size_t pos) const {
         if (pos < kPositions) {
             return scale_factors[pos];
         }
@@ -65,12 +67,12 @@ class Position {
 
     // Reset encoder at given position to zero
     // Returns true on success, false on error
-    [[nodiscard]] bool reset_encoder(size_t pos) noexcept;
+    [[nodiscard]] bool reset_encoder(size_t pos);
     
     // Test mode control
-    void enable_test_mode(bool enable) noexcept;
-    void set_test_pattern(uint8_t pattern) noexcept;
-    [[nodiscard]] bool is_test_mode() const noexcept { return test_mode; }
+    void enable_test_mode(bool enable);
+    void set_test_pattern(uint8_t pattern);
+    [[nodiscard]] bool is_test_mode() const { return test_mode; }
 
 };
 

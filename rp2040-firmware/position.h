@@ -15,7 +15,6 @@ class Position {
     static constexpr size_t kPositions = QuadratureEncoder::kNumEncoders;
     std::array<double, kPositions> positions{};
     std::array<double, kPositions> scale_factors{};
-    std::array<double, kPositions> offsets{};
     
     bool test_mode = false;
     uint32_t test_mode_start_time = 0;
@@ -63,12 +62,6 @@ class Position {
 
     [[nodiscard]] bool reset_encoder(size_t pos);
     
-    
-    void set_offset(size_t pos, double offset_value) {
-        if (pos < kPositions) {
-            offsets[pos] = offset_value;
-        }
-    }
     
     void enable_test_mode(bool enable);
     void set_test_pattern(uint8_t pattern);

@@ -7,7 +7,6 @@ pin out bit connected "True when USB device is connected";
 pin in s32 test-mode "Test mode: 0=off, 1=sine wave, 2=circular, 3=linear ramp, 4=random walk";
 pin io float scale-#[4] = -1e30 "Scale factor for each encoder";
 pin in bit reset-#[4] "Reset encoder position to zero (rising edge triggered)";
-pin io float offset-#[4] "Offset to add to encoder position";
 
 option userspace yes;
 option extra_link_args "-lusb-1.0";
@@ -34,7 +33,6 @@ option extra_link_args "-lusb-1.0";
 #define VENDOR_REQUEST_SET_SCALE 0x03
 #define VENDOR_REQUEST_GET_SCALE 0x04
 #define VENDOR_REQUEST_RESET_POSITION 0x05
-#define VENDOR_REQUEST_SET_OFFSET 0x06
 
 // Sentinel values for data validation
 #define POSITION_DATA_SENTINEL 0x3F8A7C91
@@ -46,7 +44,6 @@ static int should_exit = 0;
 static int last_test_mode = -1;
 static double last_scale[4] = {-1e30, -1e30, -1e30, -1e30};
 static int last_reset[4] = {0, 0, 0, 0};
-static double last_offset[4] = {0, 0, 0, 0};
 static double invalid_scale_value = -1e30;
 
 static double position_multiplier = -1.0;
@@ -197,20 +194,6 @@ void user_mainloop(void) {
                         last_reset[i] = reset(i);
                     }
                     
-                    // Check for offset changes
-                    for (int i = 0; i < 4; i++) {
-                        if (offset(i) != last_offset[i]) {
-                            // Offset value changed - send set position command
-                            double offset_value = offset(i);
-                            buffer[0] = VENDOR_REQUEST_SET_OFFSET;
-                            buffer[1] = i;  // Encoder index
-                            memcpy(&buffer[2], &offset_value, sizeof(double));
-                            r = libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 10, &actual_length, 100);
-                            if (r == 0) {
-                                last_offset[i] = offset_value;
-                            }
-                        }
-                    }
                     
                     // Send position request
                     buffer[0] = VENDOR_REQUEST_GET_POSITION;

@@ -1,6 +1,6 @@
 # RP2040 LinuxCNC HAL Quadrature Encoder Interface
 
-This project implements a USB quadrature encoder interface on RP2040-based boards that connects with LinuxCNC through a HAL (Hardware Abstraction Layer) component.
+This project implements a USB quadrature encoder interface on RP2040-based boards that connects DRO scales with TTL level A/B quadrature signals to LinuxCNC through a HAL (Hardware Abstraction Layer) component. Compatible with common brands like [TOAUTO](https://www.toautotool.com/products/2-3-axis-dro-kit-standard-scales) and other 5V TTL quadrature encoder scales.
 
 ## Project Structure
 
@@ -40,8 +40,8 @@ make
 
 ## Hardware Configuration
 
-### Quadrature Encoder Connections
-The system supports 4 quadrature encoders connected to GPIO pins 0-7:
+### DRO Scale Connections
+The system supports 4 DRO scales with TTL level A/B quadrature signals connected to GPIO pins 0-7:
 - Encoder 0 (X-axis): GPIO 0 (A), GPIO 1 (B)
 - Encoder 1 (Y-axis): GPIO 2 (A), GPIO 3 (B)
 - Encoder 2 (Z-axis): GPIO 4 (A), GPIO 5 (B)

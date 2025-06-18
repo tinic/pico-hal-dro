@@ -4,7 +4,7 @@ A USB quadrature encoder interface that connects DRO scales to LinuxCNC using an
 
 ## Overview
 
-This project allows you to connect existing DRO (Digital Read Out) scales to LinuxCNC through a simple USB connection. It uses readily available components:
+This project allows you to connect existing DRO (Digital Read Out) scales with TTL level A/B quadrature signals to LinuxCNC through a simple USB connection. Common brands include [TOAUTO](https://www.toautotool.com/products/2-3-axis-dro-kit-standard-scales) and other similar 5V TTL quadrature encoder scales. It uses readily available components:
 
 **Waveshare RP2040-Zero:**
 
@@ -16,7 +16,7 @@ This project allows you to connect existing DRO (Digital Read Out) scales to Lin
 
 ## Features
 
-- Supports 4 quadrature encoders (X, Y, Z, A axes)
+- Supports 4 DRO scales with TTL A/B quadrature signals (X, Y, Z, A axes)
 - High-speed PIO-based encoder counting
 - 32-bit position counters
 - USB interface with LinuxCNC HAL component

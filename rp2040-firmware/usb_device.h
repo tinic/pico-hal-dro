@@ -19,7 +19,8 @@ class USBDevice {
     static constexpr uint8_t VENDOR_REQUEST_SET_TEST_MODE = 0x02;
     static constexpr uint8_t VENDOR_REQUEST_SET_SCALE = 0x03;
     static constexpr uint8_t VENDOR_REQUEST_GET_SCALE = 0x04;
-    static constexpr uint8_t VENDOR_REQUEST_RESET_ENCODER = 0x05;
+    static constexpr uint8_t VENDOR_REQUEST_RESET_POSITION = 0x05;
+    static constexpr uint8_t VENDOR_REQUEST_SET_OFFSET = 0x06;
     
     static constexpr uint32_t POSITION_DATA_SENTINEL = 0x3F8A7C91;
     static constexpr uint32_t SCALE_DATA_SENTINEL = 0x7B2D4E8F;

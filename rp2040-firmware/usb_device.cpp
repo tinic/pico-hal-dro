@@ -98,13 +98,24 @@ void USBDevice::task() {
                     case VENDOR_REQUEST_GET_SCALE:
                         (void)send_scale_data();
                         break;
-                    case VENDOR_REQUEST_RESET_ENCODER:
+                    case VENDOR_REQUEST_RESET_POSITION:
                         if (i + 1 < count) {
                             uint8_t encoder_index = request_buf[i + 1];
                             if (encoder_index < 4) {
                                 (void)Position::instance().reset_encoder(encoder_index);
                             }
                             i++;
+                        }
+                        break;
+                    case VENDOR_REQUEST_SET_OFFSET:
+                        if (i + 9 <= count) {
+                            uint8_t encoder_index = request_buf[i + 1];
+                            double offset_value;
+                            memcpy(&offset_value, &request_buf[i + 2], sizeof(double));
+                            if (encoder_index < 4) {
+                                Position::instance().set_offset(encoder_index, offset_value);
+                            }
+                            i += 9;
                         }
                         break;
                 }

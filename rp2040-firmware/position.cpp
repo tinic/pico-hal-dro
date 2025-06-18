@@ -47,7 +47,7 @@ void Position::update_from_encoders() {
     std::array<int32_t, kPositions> counts;
     QuadratureEncoder::instance().get_all_counts(counts);
     for (size_t i = 0; i < kPositions; i++) {
-        positions[i] = static_cast<double>(counts[i]) * scale_factors[i];
+        positions[i] = (static_cast<double>(counts[i]) * scale_factors[i]) + offsets[i];
     }
 }
 
@@ -64,6 +64,7 @@ bool Position::reset_encoder(size_t pos) {
     positions[pos] = 0.0;
     return true;
 }
+
 
 void Position::enable_test_mode(bool enable) {
     if (enable && !test_mode) {

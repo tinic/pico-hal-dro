@@ -31,34 +31,6 @@ The system uses GPIO pins 0-7 for encoder inputs:
 | 2       | Z    | 4      | 5      | Z-axis linear scale |
 | 3       | A    | 6      | 7      | A-axis rotary encoder |
 
-### Control Pins
-| Function | GPIO | Description |
-|----------|------|-------------|
-| Level Shifter OE | 8 | Output Enable for TXS0108E (active high) |
-| Status LED | Board-specific | WS2812 RGB LED (Waveshare RP2040 Zero) |
-
-## Wiring Diagram
-
-```
-                    ┌─────────────────┐
-                    │   RP2040 Board  │
-                    │                 │
-    Encoder 0 A ────┤ GPIO 0          │
-    Encoder 0 B ────┤ GPIO 1          │
-    Encoder 1 A ────┤ GPIO 2          │
-    Encoder 1 B ────┤ GPIO 3          │
-    Encoder 2 A ────┤ GPIO 4          │
-    Encoder 2 B ────┤ GPIO 5          │
-    Encoder 3 A ────┤ GPIO 6          │
-    Encoder 3 B ────┤ GPIO 7          │
-                    │                 │
-    Level Shift OE ─┤ GPIO 8          │
-                    │                 │
-                    │            USB  ├──── To LinuxCNC PC
-                    │                 │
-                    └─────────────────┘
-```
-
 ## Level Shifter Setup (TXS0108E)
 
 The TXS0108E is used to interface between the RP2040 (3.3V) and encoder signals (typically 5V):

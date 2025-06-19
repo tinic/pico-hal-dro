@@ -18,6 +18,8 @@ This project allows you to connect existing DRO (Digital Read Out) scales with T
 
 [<img src="./hardware/IMG_8394.jpg" width="300px"/>](./hardware/IMG_8394.jpg)
 
+Spliced into the existing DRO, there are likely nicer looking solutions than this:
+
 [<img src="./hardware/IMG_8388.jpg" width="300px"/>](./hardware/IMG_8388.jpg)
 
 

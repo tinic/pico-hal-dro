@@ -14,7 +14,12 @@ This project allows you to connect existing DRO (Digital Read Out) scales with T
 
 [<img src="./hardware/TXS0108E.jpg" width="200px"/>](./hardware/TXS0108E.jpg)
 
-[<img src="./hardware/IMG_8394.jpg" width="200px"/>](./hardware/IMG_8394.jpg)
+## Finished board
+
+[<img src="./hardware/IMG_8394.jpg" width="300px"/>](./hardware/IMG_8394.jpg)
+
+[<img src="./hardware/IMG_8388.jpg" width="300px"/>](./hardware/IMG_8388.jpg)
+
 
 ## Features
 

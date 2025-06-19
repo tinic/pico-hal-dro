@@ -4,7 +4,7 @@ This document describes the hardware setup for the RP2040-based USB quadrature e
 
 ## Overview
 
-The system reads up to 4 quadrature encoders and provides position data over USB to LinuxCNC. It uses PIO state machines for high-speed, accurate encoder counting with 64-bit signed position counters.
+The system reads up to 4 quadrature encoders and provides position data over USB to LinuxCNC. It uses PIO state machines for high-speed, accurate encoder counting with 32-bit signed position counters.
 
 ## Required Components
 
@@ -31,34 +31,6 @@ The system uses GPIO pins 0-7 for encoder inputs:
 | 2       | Z    | 4      | 5      | Z-axis linear scale |
 | 3       | A    | 6      | 7      | A-axis rotary encoder |
 
-### Control Pins
-| Function | GPIO | Description |
-|----------|------|-------------|
-| Level Shifter OE | 8 | Output Enable for TXS0108E (active high) |
-| Status LED | Board-specific | WS2812 RGB LED (Waveshare RP2040 Zero) |
-
-## Wiring Diagram
-
-```
-                    ┌─────────────────┐
-                    │   RP2040 Board  │
-                    │                 │
-    Encoder 0 A ────┤ GPIO 0          │
-    Encoder 0 B ────┤ GPIO 1          │
-    Encoder 1 A ────┤ GPIO 2          │
-    Encoder 1 B ────┤ GPIO 3          │
-    Encoder 2 A ────┤ GPIO 4          │
-    Encoder 2 B ────┤ GPIO 5          │
-    Encoder 3 A ────┤ GPIO 6          │
-    Encoder 3 B ────┤ GPIO 7          │
-                    │                 │
-    Level Shift OE ─┤ GPIO 8          │
-                    │                 │
-                    │            USB  ├──── To LinuxCNC PC
-                    │                 │
-                    └─────────────────┘
-```
-
 ## Level Shifter Setup (TXS0108E)
 
 The TXS0108E is used to interface between the RP2040 (3.3V) and encoder signals (typically 5V):
@@ -67,21 +39,21 @@ The TXS0108E is used to interface between the RP2040 (3.3V) and encoder signals 
 ```
 Waveshare RP2040 Zero       TXS0108E          Terminal Block (10-pin)
 ─────────────────────       ────────          ──────────────────────
-Pin 1  (GPIO 0) ─────────── A1    B1 ─────────── Pin 1 (Encoder 0 A)
-Pin 2  (GPIO 1) ─────────── A2    B2 ─────────── Pin 2 (Encoder 0 B)
-Pin 3  (GPIO 2) ─────────── A3    B3 ─────────── Pin 3 (Encoder 1 A)
-Pin 4  (GPIO 3) ─────────── A4    B4 ─────────── Pin 4 (Encoder 1 B)
-Pin 5  (GPIO 4) ─────────── A5    B5 ─────────── Pin 5 (Encoder 2 A)
-Pin 6  (GPIO 5) ─────────── A6    B6 ─────────── Pin 6 (Encoder 2 B)
-Pin 7  (GPIO 6) ─────────── A7    B7 ─────────── Pin 7 (Encoder 3 A)
-Pin 8  (GPIO 7) ─────────── A8    B8 ─────────── Pin 8 (Encoder 3 B)
-Pin 9  (GPIO 8) ─────────── OE              
-Pin 10 (3V3)    ─────────── VCCA             
-Pin 13 (GND)    ─────────── GND   GND ─────────── Pin 9  (Common GND)
-                            VCCB ─────────── Pin 10 (+5V Supply)
+Pin 30 (3V3)    ─────────── VCCA  VCCB ───────── Pin 0 (+5V Supply)           
+Pin 0  (GPIO 0) ─────────── A1    B1 ─────────── Pin 1 (Encoder 0 A)
+Pin 1  (GPIO 1) ─────────── A2    B2 ─────────── Pin 2 (Encoder 0 B)
+Pin 2  (GPIO 2) ─────────── A3    B3 ─────────── Pin 3 (Encoder 1 A)
+Pin 3  (GPIO 3) ─────────── A4    B4 ─────────── Pin 4 (Encoder 1 B)
+Pin 4  (GPIO 4) ─────────── A5    B5 ─────────── Pin 5 (Encoder 2 A)
+Pin 5  (GPIO 5) ─────────── A6    B6 ─────────── Pin 6 (Encoder 2 B)
+Pin 6  (GPIO 6) ─────────── A7    B7 ─────────── Pin 7 (Encoder 3 A)
+Pin 7  (GPIO 7) ─────────── A8    B8 ─────────── Pin 8 (Encoder 3 B)
+Pin 8  (GPIO 8) ─────────── OE              
+Pin 31 (GND)    ───────────      GND ────────── Pin 9 (Common GND)
+                                  
 ```
 
-**Note**: The A-side of the TXS0108E is directly soldered to pins 1-9 of the Waveshare RP2040 Zero.
+**Note**: The A-side of the TXS0108E is directly soldered to pins 0-8 of the Waveshare RP2040 Zero. GND and 3V3 need to be wired by hand.
 
 ### Level Shifter Notes
 - OE (Output Enable) pin is set HIGH to enable bidirectional level shifting

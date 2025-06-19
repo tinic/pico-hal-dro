@@ -22,7 +22,6 @@ Spliced into the existing DRO, there are likely nicer looking solutions than thi
 
 [<img src="./hardware/IMG_8388.jpg" width="300px"/>](./hardware/IMG_8388.jpg)
 
-
 ## Features
 
 - Supports 4 DRO scales with TTL A/B quadrature signals (X, Y, Z, A axes)

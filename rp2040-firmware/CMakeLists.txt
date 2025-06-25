@@ -12,7 +12,8 @@ if (EXISTS ${picoVscode})
     include(${picoVscode})
 endif()
 # ====================================================================================
-set(PICO_BOARD pico CACHE STRING "Board type")
+set(PICO_BOARD waveshare_rp2040_zero CACHE STRING "Board type")
+#set(PICO_BOARD waveshare_rp2350_zero CACHE STRING "Board type")
 
 cmake_minimum_required(VERSION 3.13...3.27)
 

@@ -185,8 +185,7 @@ void user_mainloop(void) {
                     
                     // Check for reset pin rising edges
                     for (int i = 0; i < 4; i++) {
-                        if (reset(i) && !last_reset[i]) {
-                            // Rising edge detected - send reset command
+                        if (reset(i) != last_reset[i]) {
                             buffer[0] = VENDOR_REQUEST_RESET_POSITION;
                             buffer[1] = i;  // Encoder index
                             r = libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 2, &actual_length, 100);

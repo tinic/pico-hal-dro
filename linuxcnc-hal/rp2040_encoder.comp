@@ -6,7 +6,7 @@ pin out float position-#[4] "Position values from the RP2040 device";
 pin out bit connected "True when USB device is connected";
 pin in s32 test-mode "Test mode: 0=off, 1=sine wave, 2=circular, 3=linear ramp, 4=random walk";
 pin io float scale-#[4] = -1e30 "Scale factor for each encoder";
-pin in bit reset-#[4] "Reset encoder position to zero (rising edge triggered)";
+pin in u32 reset-#[4] "Reset encoder position to zero (change in value triggered)";
 
 option userspace yes;
 option extra_link_args "-lusb-1.0";
@@ -48,7 +48,7 @@ static double invalid_scale_value = -1e30;
 
 static double position_multiplier = -1.0;
 
-static void signal_handler(int sig) {
+static void signal_handler(int /*sig*/) {
     should_exit = 1;
 }
 

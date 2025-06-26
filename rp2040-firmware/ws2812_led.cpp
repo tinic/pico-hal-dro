@@ -14,7 +14,7 @@ WS2812Led& WS2812Led::instance() {
 
 void WS2812Led::init() {
     uint offset = pio_add_program(pio, &ws2812_program);
-    ws2812_program_init(pio, sm, offset, LED_PIN, 800000, false);
+    ws2812_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, 800000, false);
 }
 
 void WS2812Led::set_color(uint8_t red, uint8_t green, uint8_t blue) {

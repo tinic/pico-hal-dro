@@ -6,8 +6,6 @@
 
 class WS2812Led {
 public:
-    static constexpr uint8_t LED_PIN = 16;
-    
     static WS2812Led& instance();
     
     void set_color(uint8_t red, uint8_t green, uint8_t blue);

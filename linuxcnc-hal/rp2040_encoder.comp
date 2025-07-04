@@ -5,7 +5,8 @@ license "GPL";
 pin out float position-#[4] "Position values from the RP2040 device";
 pin out bit connected "True when USB device is connected";
 pin in s32 test-mode "Test mode: 0=off, 1=sine wave, 2=circular, 3=linear ramp, 4=random walk";
-pin in float scale-#[4] = "Scale factor for each encoder";
+pin out float scale-fb-#[4] = -1e30 "Scale factor for each encoder";
+pin in float scale-#[4] "Scale factor for each encoder";
 pin in u32 reset-#[4] "Reset encoder position to zero (change in value triggered)";
 
 option userspace yes;
@@ -43,6 +44,7 @@ static libusb_context *ctx = NULL;
 static int should_exit = 0;
 static int last_test_mode = -1;
 static double last_scale[4] = {-1e30, -1e30, -1e30, -1e30};
+static double last_scale_fb[4] = {-1e30, -1e30, -1e30, -1e30};
 static int last_reset[4] = {0, 0, 0, 0};
 static double invalid_scale_value = -1e30;
 
@@ -140,7 +142,7 @@ void user_mainloop(void) {
             }
             
             if (dev_handle) {
-                if (scale(0) <= invalid_scale_value || last_scale[0] <= invalid_scale_value) {
+                if (scale_fb(0) <= invalid_scale_value || last_scale_fb[0] <= invalid_scale_value) {
                     buffer[0] = VENDOR_REQUEST_GET_SCALE;
                     actual_length = 0;
                     r = libusb_bulk_transfer(dev_handle, EP_OUT, buffer, 1, &actual_length, 100);
@@ -151,10 +153,10 @@ void user_mainloop(void) {
                             uint32_t *sentinel_ptr = (uint32_t*)buffer;
                             if (*sentinel_ptr == SCALE_DATA_SENTINEL) {
                                 // Extract scale data after sentinel (4 bytes)
-                                double *scales = (double*)(buffer + 4);
+                                double *scales_fb = (double*)(buffer + 4);
                                 for (int i = 0; i < 4; i++) {
-                                    scale(i) = scales[i];
-                                    last_scale[i] = scales[i];
+                                    scale_fb(i) = scales_fb[i];
+                                    last_scale_fb[i] = scales_fb[i];
                                 }
                             }
                         }
